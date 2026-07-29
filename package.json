@@ -1,0 +1,17 @@
+{
+  "name": "plotteleport",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "build": "tsc",
+    "watch": "tsc --watch"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@minecraft/server": "^2.8.0",
+    "typescript": "^7.0.2"
+  }
+}

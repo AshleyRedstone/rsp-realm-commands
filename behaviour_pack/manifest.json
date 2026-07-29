@@ -1,0 +1,46 @@
+{
+    "format_version": 2,
+    "header": {
+        "name": "Plot Teleport",
+        "description": "Adds plot teleport commands",
+        "uuid": "1df08878-ee9a-46b2-a100-93fd93cb7e31",
+        "version": [
+            1,
+            0,
+            0
+        ],
+        "min_engine_version": [
+            1,
+            21,
+            80
+        ]
+    },
+    "modules": [
+        {
+            "type": "data",
+            "uuid": "571dbfd9-af65-4594-a8fe-4073f8d4b1cc",
+            "version": [
+                1,
+                0,
+                0
+            ]
+        },
+        {
+            "type": "script",
+            "language": "javascript",
+            "entry": "scripts/main.js",
+            "uuid": "96314164-8ea0-4ecd-b66d-8d5d3419dac8",
+            "version": [
+                1,
+                0,
+                0
+            ]
+        }
+    ],
+    "dependencies": [
+        {
+            "module_name": "@minecraft/server",
+            "version": "2.0.0"
+        }
+    ]
+}
