@@ -84,9 +84,7 @@ function translatedSuccess(
 ): CustomCommandResult {
     sendTranslation(player, key, parameters);
 
-    return {
-        status: CustomCommandStatus.Success,
-    };
+    return success();
 }
 
 function translatedFailure(
@@ -96,9 +94,7 @@ function translatedFailure(
 ): CustomCommandResult {
     sendTranslation(player, key, parameters);
 
-    return {
-        status: CustomCommandStatus.Failure,
-    };
+    return success();
 }
 
 function translatedOriginFailure(

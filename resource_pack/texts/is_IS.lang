@@ -2,27 +2,27 @@ plots.error.player_only=Aðeins leikmaður getur notað þessa skipun.
 plots.error.no_permission=Þú hefur ekki heimild til að stjórna áfangastöðum.
 
 plots.visit.usage=Notkun: /plot visit <áfangastaður>
-plots.visit.unknown=Óþekktur áfangastaður „%%1“.
-plots.visit.success=§aÞú varst færð/ur til §f%%1§a.
+plots.visit.unknown=Óþekktur áfangastaður „%1“.
+plots.visit.success=§aÞú varst færð/ur til §f%1§a.
 
 plots.list.empty=Engir áfangastaðir eru til.
-plots.list.header=Áfangastaðir: %%1
+plots.list.header=Áfangastaðir: %1
 
 plots.home.not_set=Þú hefur ekki valið heimili. Notaðu /plot home set <áfangastaður>.
 plots.home.usage=Notkun: /plot home set <áfangastaður>
-plots.home.unknown_action=Óþekkt heimilisaðgerð „%%1“. Notkun: /plot home [set <áfangastaður>]
-plots.home.set=Heimili þitt hefur verið stillt á „%%1“.
-plots.home.deleted=Heimilisáfangastaðurinn „%%1“ er ekki lengur til. Veldu annan með /plot home set <áfangastaður>.
-plots.home.teleported=§aÞú varst færð/ur heim til §f%%1§a.
+plots.home.unknown_action=Óþekkt heimilisaðgerð „%1“. Notkun: /plot home [set <áfangastaður>]
+plots.home.set=Heimili þitt hefur verið stillt á „%1“.
+plots.home.deleted=Heimilisáfangastaðurinn „%1“ er ekki lengur til. Veldu annan með /plot home set <áfangastaður>.
+plots.home.teleported=§aÞú varst færð/ur heim til §f%1§a.
 
 plots.admin.usage=Notkun: /plot admin <set|remove>
 plots.admin.set_usage=Notkun: /plot admin set <áfangastaður> [x] [y] [z]
 plots.admin.remove_usage=Notkun: /plot admin remove <áfangastaður>
-plots.admin.added=Áfangastaðnum „%%1“ var bætt við á %%2, %%3, %%4.
-plots.admin.updated=Áfangastaðurinn „%%1“ var uppfærður á %%2, %%3, %%4.
-plots.admin.missing=Áfangastaðurinn „%%1“ er ekki til.
-plots.admin.removed=Áfangastaðurinn „%%1“ var fjarlægður.
-plots.admin.unknown_action=Óþekkt stjórnunaraðgerð „%%1“.
+plots.admin.added=Áfangastaðnum „%1“ var bætt við á %2, %3, %4.
+plots.admin.updated=Áfangastaðurinn „%1“ var uppfærður á %2, %3, %4.
+plots.admin.missing=Áfangastaðurinn „%1“ er ekki til.
+plots.admin.removed=Áfangastaðurinn „%1“ var fjarlægður.
+plots.admin.unknown_action=Óþekkt stjórnunaraðgerð „%1“.
 
-plots.command.unknown=Óþekkt plotskipun „%%1“.
-plots.command.unknown_alias=Óþekkt stytting plotskipunar „%%1“.
+plots.command.unknown=Óþekkt plotskipun „%1“.
+plots.command.unknown_alias=Óþekkt stytting plotskipunar „%1“.
