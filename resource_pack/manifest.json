@@ -1,0 +1,29 @@
+{
+    "format_version": 2,
+    "header": {
+        "name": "Plot Translations",
+        "description": "Plot teleports translation strings",
+        "uuid": "bc95ad4b-b672-464b-8f0e-03407f20f6gt",
+        "version": [
+            1,
+            0,
+            0
+        ],
+        "min_engine_version": [
+            1,
+            21,
+            0
+        ]
+    },
+    "modules": [
+        {
+            "type": "resources",
+            "uuid": "92eeec68-a098-4b5c-8d32-f90c142dcb00",
+            "version": [
+                1,
+                0,
+                0
+            ]
+        }
+    ]
+}
