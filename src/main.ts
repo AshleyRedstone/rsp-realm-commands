@@ -19,6 +19,7 @@ interface PlotDestination {
 type PlotDestinations = Record<string, PlotDestination>;
 
 const STORAGE_KEY = "plots:destinations";
+const HOME_PROPERTY = "plots:home";
 
 const defaultDestinations: PlotDestinations = {
     spawn: { x: 0, y: 64, z: 0 },
@@ -63,23 +64,78 @@ function failure(message: string): CustomCommandResult {
     };
 }
 
+function sendTranslation(
+    player: Player,
+    key: string,
+    parameters: string[] = [],
+): void {
+    system.run(() => {
+        player.sendMessage({
+            translate: key,
+            with: parameters,
+        });
+    });
+}
+
+function translatedSuccess(
+    player: Player,
+    key: string,
+    parameters: string[] = [],
+): CustomCommandResult {
+    sendTranslation(player, key, parameters);
+
+    return {
+        status: CustomCommandStatus.Success,
+    };
+}
+
+function translatedFailure(
+    player: Player,
+    key: string,
+    parameters: string[] = [],
+): CustomCommandResult {
+    sendTranslation(player, key, parameters);
+
+    return {
+        status: CustomCommandStatus.Failure,
+    };
+}
+
+function translatedOriginFailure(
+    origin: CustomCommandOrigin,
+    key: string,
+    parameters: string[] = [],
+): CustomCommandResult {
+    const player = origin.sourceEntity;
+
+    if (player instanceof Player) {
+        return translatedFailure(
+            player,
+            key,
+            parameters,
+        );
+    }
+
+    return failure(key);
+}
+
 system.beforeEvents.startup.subscribe((event) => {
     const registry = event.customCommandRegistry;
 
-registry.registerEnum(
-    "plots:plot_mode",
-    ["visit", "home", "list", "admin"],
-);
+    registry.registerEnum(
+        "plots:plot_mode",
+        ["visit", "home", "list", "admin"],
+    );
 
-registry.registerEnum(
-    "plots:short_mode",
-    ["v", "h", "l", "a"],
-);
+    registry.registerEnum(
+        "plots:short_mode",
+        ["v", "h", "l", "a"],
+    );
 
-registry.registerEnum(
-    "plots:admin_action",
-    ["set", "remove"],
-);
+    registry.registerEnum(
+        "plots:admin_action",
+        ["set", "remove"],
+    );
 
     const plotCommand: CustomCommand = {
         name: "plots:plot",
@@ -117,43 +173,43 @@ registry.registerEnum(
             },
         ],
     };
-    
+
     const shortPlotCommand: CustomCommand = {
-    name: "plots:p",
-    description: "Short alias for /plot",
-    permissionLevel: CommandPermissionLevel.Any,
-    cheatsRequired: false,
+        name: "plots:p",
+        description: "Short alias for /plot",
+        permissionLevel: CommandPermissionLevel.Any,
+        cheatsRequired: false,
 
-    mandatoryParameters: [
-        {
-            name: "plots:short_mode",
-            type: CustomCommandParamType.Enum,
-        },
-    ],
+        mandatoryParameters: [
+            {
+                name: "plots:short_mode",
+                type: CustomCommandParamType.Enum,
+            },
+        ],
 
-    optionalParameters: [
-        {
-            name: "argument",
-            type: CustomCommandParamType.String,
-        },
-        {
-            name: "destination",
-            type: CustomCommandParamType.String,
-        },
-        {
-            name: "x",
-            type: CustomCommandParamType.Float,
-        },
-        {
-            name: "y",
-            type: CustomCommandParamType.Float,
-        },
-        {
-            name: "z",
-            type: CustomCommandParamType.Float,
-        },
-    ],
-};
+        optionalParameters: [
+            {
+                name: "argument",
+                type: CustomCommandParamType.String,
+            },
+            {
+                name: "destination",
+                type: CustomCommandParamType.String,
+            },
+            {
+                name: "x",
+                type: CustomCommandParamType.Float,
+            },
+            {
+                name: "y",
+                type: CustomCommandParamType.Float,
+            },
+            {
+                name: "z",
+                type: CustomCommandParamType.Float,
+            },
+        ],
+    };
 
     registry.registerCommand(
         plotCommand,
@@ -187,7 +243,7 @@ function handlePlotCommand(
             );
 
         case "list":
-            return listDestinations();
+            return listDestinations(origin);
 
         case "admin":
             return handleAdminCommand(
@@ -200,8 +256,10 @@ function handlePlotCommand(
             );
 
         default:
-            return failure(
-                `Unknown plot subcommand "${mode}".`,
+            return translatedOriginFailure(
+                origin,
+                "plots.command.unknown",
+                [mode],
             );
     }
 }
@@ -227,7 +285,7 @@ function handleShortPlotCommand(
             );
 
         case "l":
-            return listDestinations();
+            return listDestinations(origin);
 
         case "a":
             return handleAdminCommand(
@@ -240,8 +298,10 @@ function handleShortPlotCommand(
             );
 
         default:
-            return failure(
-                `Unknown plot alias "${mode}".`,
+            return translatedOriginFailure(
+                origin,
+                "plots.command.unknown_alias",
+                [mode],
             );
     }
 }
@@ -259,8 +319,9 @@ function visitDestination(
     }
 
     if (destinationName === undefined) {
-        return failure(
-            "Usage: /plot visit <destination>",
+        return translatedFailure(
+            player,
+            "plots.visit.usage",
         );
     }
 
@@ -269,28 +330,45 @@ function visitDestination(
     const destination = destinations[key];
 
     if (!destination) {
-        return failure(
-            `Unknown destination "${key}".`,
+        return translatedFailure(
+            player,
+            "plots.visit.unknown",
+            [key],
         );
     }
 
     system.run(() => {
         player.teleport(destination);
-        player.sendMessage(
-            `§aTeleported to §f${key}§a.`,
-        );
+
+        player.sendMessage({
+            translate: "plots.visit.success",
+            with: [key],
+        });
     });
 
-    return success();
+    return {
+        status: CustomCommandStatus.Success,
+    };
 }
 
-function listDestinations(): CustomCommandResult {
+function listDestinations(
+    origin: CustomCommandOrigin,
+): CustomCommandResult {
+    const player = origin.sourceEntity;
+
+    if (!(player instanceof Player)) {
+        return failure(
+            "This command can only be used by a player.",
+        );
+    }
+
     const destinations = loadDestinations();
     const names = Object.keys(destinations).sort();
 
     if (names.length === 0) {
-        return success(
-            "There are no plot destinations.",
+        return translatedSuccess(
+            player,
+            "plots.list.empty",
         );
     }
 
@@ -307,10 +385,12 @@ function listDestinations(): CustomCommandResult {
         })
         .join(", ");
 
-    return success(`Destinations: ${list}`);
+    return translatedSuccess(
+        player,
+        "plots.list.header",
+        [list],
+    );
 }
-
-const HOME_PROPERTY = "plots:home";
 
 function handleHomeCommand(
     origin: CustomCommandOrigin,
@@ -325,31 +405,25 @@ function handleHomeCommand(
         );
     }
 
-    /*
-     * /plot home
-     * /p h
-     */
     if (action === undefined) {
         return teleportHome(player);
     }
 
-    /*
-     * /plot home set <destination>
-     * /p h set <destination>
-     */
     if (action.toLowerCase() === "set") {
         if (destinationName === undefined) {
-            return failure(
-                "Usage: /plot home set <destination>",
+            return translatedFailure(
+                player,
+                "plots.home.usage",
             );
         }
 
         return setHome(player, destinationName);
     }
 
-    return failure(
-        `Unknown home action "${action}". ` +
-        "Usage: /plot home [set <destination>]",
+    return translatedFailure(
+        player,
+        "plots.home.unknown_action",
+        [action],
     );
 }
 
@@ -361,8 +435,10 @@ function setHome(
     const destinations = loadDestinations();
 
     if (!destinations[key]) {
-        return failure(
-            `Unknown destination "${key}".`,
+        return translatedFailure(
+            player,
+            "plots.visit.unknown",
+            [key],
         );
     }
 
@@ -371,11 +447,16 @@ function setHome(
             HOME_PROPERTY,
             key,
         );
+
+        player.sendMessage({
+            translate: "plots.home.set",
+            with: [key],
+        });
     });
 
-    return success(
-        `Your home has been set to "${key}".`,
-    );
+    return {
+        status: CustomCommandStatus.Success,
+    };
 }
 
 function teleportHome(
@@ -385,9 +466,9 @@ function teleportHome(
         player.getDynamicProperty(HOME_PROPERTY);
 
     if (typeof storedHome !== "string") {
-        return failure(
-            "You have not selected a home. " +
-            "Use /plot home set <destination>.",
+        return translatedFailure(
+            player,
+            "plots.home.not_set",
         );
     }
 
@@ -396,21 +477,25 @@ function teleportHome(
     const destination = destinations[key];
 
     if (!destination) {
-        return failure(
-            `Your home destination "${key}" no longer exists. ` +
-            "Choose another with /plot home set <destination>.",
+        return translatedFailure(
+            player,
+            "plots.home.deleted",
+            [key],
         );
     }
 
     system.run(() => {
         player.teleport(destination);
 
-        player.sendMessage(
-            `§aTeleported home to §f${key}§a.`,
-        );
+        player.sendMessage({
+            translate: "plots.home.teleported",
+            with: [key],
+        });
     });
 
-    return success();
+    return {
+        status: CustomCommandStatus.Success,
+    };
 }
 
 function handleAdminCommand(
@@ -430,14 +515,16 @@ function handleAdminCommand(
     }
 
     if (!player.hasTag("plot_admin")) {
-        return failure(
-            "You do not have permission to manage plots.",
+        return translatedFailure(
+            player,
+            "plots.error.no_permission",
         );
     }
 
     if (action === undefined) {
-        return failure(
-            "Usage: /plot admin <set|remove>",
+        return translatedFailure(
+            player,
+            "plots.admin.usage",
         );
     }
 
@@ -446,8 +533,9 @@ function handleAdminCommand(
     switch (action.toLowerCase()) {
         case "set": {
             if (destinationName === undefined) {
-                return failure(
-                    "Usage: /plot admin set <destination> [x] [y] [z]",
+                return translatedFailure(
+                    player,
+                    "plots.admin.set_usage",
                 );
             }
 
@@ -471,27 +559,35 @@ function handleAdminCommand(
                 saveDestinations(destinations);
             });
 
-            return success(
-                `${alreadyExists ? "Updated" : "Added"} ` +
-                `"${key}" at ` +
-                `${finalX.toFixed(2)}, ` +
-                `${finalY.toFixed(2)}, ` +
-                `${finalZ.toFixed(2)}.`,
+            return translatedSuccess(
+                player,
+                alreadyExists
+                    ? "plots.admin.updated"
+                    : "plots.admin.added",
+                [
+                    key,
+                    finalX.toFixed(2),
+                    finalY.toFixed(2),
+                    finalZ.toFixed(2),
+                ],
             );
         }
 
         case "remove": {
             if (destinationName === undefined) {
-                return failure(
-                    "Usage: /plot admin remove <destination>",
+                return translatedFailure(
+                    player,
+                    "plots.admin.remove_usage",
                 );
             }
 
             const key = normaliseName(destinationName);
 
             if (!destinations[key]) {
-                return failure(
-                    `Destination "${key}" does not exist.`,
+                return translatedFailure(
+                    player,
+                    "plots.admin.missing",
+                    [key],
                 );
             }
 
@@ -501,14 +597,18 @@ function handleAdminCommand(
                 saveDestinations(destinations);
             });
 
-            return success(
-                `Removed destination "${key}".`,
+            return translatedSuccess(
+                player,
+                "plots.admin.removed",
+                [key],
             );
         }
 
         default:
-            return failure(
-                `Unknown admin action "${action}".`,
+            return translatedFailure(
+                player,
+                "plots.admin.unknown_action",
+                [action],
             );
     }
 }
