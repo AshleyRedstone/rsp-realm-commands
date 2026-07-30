@@ -61,7 +61,7 @@ system.beforeEvents.startup.subscribe((event) => {
     const registry = event.customCommandRegistry;
     registry.registerEnum("plots:plot_mode", ["visit", "home", "list", "admin"]);
     registry.registerEnum("plots:short_mode", ["v", "h", "l", "a"]);
-    registry.registerEnum("plots:admin_action", ["set", "remove"]);
+    registry.registerEnum("plots:admin_action", ["set", "remove", "debug"]);
     const plotCommand = {
         name: "plots:plot",
         description: "Visit or manage plot destinations",
@@ -262,6 +262,65 @@ function teleportHome(player) {
         status: CustomCommandStatus.Success,
     };
 }
+function formatBytes(bytes) {
+    if (bytes < 1024) {
+        return `${bytes} B`;
+    }
+    if (bytes < 1024 * 1024) {
+        return `${(bytes / 1024).toFixed(2)} KiB`;
+    }
+    return `${(bytes / (1024 * 1024)).toFixed(2)} MiB`;
+}
+function formatDynamicPropertyValue(value) {
+    if (value === undefined) {
+        return "undefined";
+    }
+    if (typeof value === "string") {
+        const preview = value.length > 100
+            ? `${value.slice(0, 100)}…`
+            : value;
+        return `"${preview}"`;
+    }
+    if (typeof value === "object") {
+        return JSON.stringify(value);
+    }
+    return String(value);
+}
+function dumpDynamicPropertyUsage(player) {
+    const propertyIds = world
+        .getDynamicPropertyIds()
+        .sort();
+    const totalBytes = world.getDynamicPropertyTotalByteCount();
+    system.run(() => {
+        player.sendMessage("§6World dynamic-property debug");
+        player.sendMessage(`§7Properties: §f${propertyIds.length}`);
+        player.sendMessage(`§7Total storage: §f${formatBytes(totalBytes)} ` +
+            `§8(${totalBytes} bytes)`);
+        if (propertyIds.length === 0) {
+            player.sendMessage("§7No world dynamic properties are stored.");
+            return;
+        }
+        player.sendMessage("§7Stored properties:");
+        for (const id of propertyIds) {
+            const value = world.getDynamicProperty(id);
+            player.sendMessage(`§8- §f${id}§7: ` +
+                formatDynamicPropertyValue(value));
+        }
+        const playerBytes = player.getDynamicPropertyTotalByteCount();
+        const playerPropertyIds = player.getDynamicPropertyIds().sort();
+        player.sendMessage("");
+        player.sendMessage("§6Your player properties");
+        player.sendMessage(`§7Properties: §f${playerPropertyIds.length}`);
+        player.sendMessage(`§7Total storage: §f${formatBytes(playerBytes)} ` +
+            `§8(${playerBytes} bytes)`);
+        for (const id of playerPropertyIds) {
+            const value = player.getDynamicProperty(id);
+            player.sendMessage(`§8- §f${id}§7: ` +
+                formatDynamicPropertyValue(value));
+        }
+    });
+    return success();
+}
 function handleAdminCommand(origin, action, destinationName, x, y, z) {
     const player = origin.sourceEntity;
     if (!(player instanceof Player)) {
@@ -316,6 +375,8 @@ function handleAdminCommand(origin, action, destinationName, x, y, z) {
             });
             return translatedSuccess(player, "plots.admin.removed", [key]);
         }
+        case "debug":
+            return dumpDynamicPropertyUsage(player);
         default:
             return translatedFailure(player, "plots.admin.unknown_action", [action]);
     }

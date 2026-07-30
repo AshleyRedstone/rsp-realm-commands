@@ -13,13 +13,13 @@ plots.home.usage=Usage: /plot home set <destination>
 plots.home.unknown_action=Unknown home action "%1". Usage: /plot home [set <destination>]
 plots.home.set=Your home has been set to "%1".
 plots.home.deleted=Your home destination "%1" no longer exists. Choose another with /plot home set <destination>.
-plots.home.teleported=§aTeleported home to §f%1§a.
+plots.home.teleported=§aTeleported to §f%1§a.
 
-plots.admin.usage=Usage: /plot admin <set|remove>
+plots.admin.usage=Usage: /plot admin <set|remove|debug>
 plots.admin.set_usage=Usage: /plot admin set <destination> [x] [y] [z]
 plots.admin.remove_usage=Usage: /plot admin remove <destination>
-plots.admin.added=Added "%1" at %2, %3, %4.
-plots.admin.updated=Updated "%1" at %%2, %3, %4.
+plots.admin.added=Added "%1" at %2, %3, %4.	# Translator note: %2, %3, and %4 are coordinates
+plots.admin.updated=Updated "%1" at %2, %3, %4. 
 plots.admin.missing=Destination "%1" does not exist.
 plots.admin.removed=Removed destination "%1".
 plots.admin.unknown_action=Unknown admin action "%1".
