@@ -62,6 +62,62 @@ system.beforeEvents.startup.subscribe((event) => {
     registry.registerEnum("plots:plot_mode", ["visit", "home", "list", "admin"]);
     registry.registerEnum("plots:short_mode", ["v", "h", "l", "a"]);
     registry.registerEnum("plots:admin_action", ["set", "remove", "debug"]);
+    registry.registerEnum("plots:rod_direction", [
+        "down",
+        "up",
+        "north",
+        "south",
+        "west",
+        "east",
+    ]);
+    const lecternCommand = {
+        name: "plots:lectern",
+        description: "Load the lectern structure",
+        permissionLevel: CommandPermissionLevel.Any,
+        cheatsRequired: false,
+    };
+    const shortLecternCommand = {
+        name: "plots:l",
+        description: "Short alias for /lectern",
+        permissionLevel: CommandPermissionLevel.Any,
+        cheatsRequired: false,
+    };
+    const striderCommand = {
+        name: "plots:strider",
+        description: "Load the strider structure",
+        permissionLevel: CommandPermissionLevel.Any,
+        cheatsRequired: false,
+    };
+    const shortStriderCommand = {
+        name: "plots:s",
+        description: "Short alias for /strider",
+        permissionLevel: CommandPermissionLevel.Any,
+        cheatsRequired: false,
+    };
+    const rodCommand = {
+        name: "plots:rod",
+        description: "Place a powered lightning rod",
+        permissionLevel: CommandPermissionLevel.Any,
+        cheatsRequired: false,
+        mandatoryParameters: [
+            {
+                name: "plots:rod_direction",
+                type: CustomCommandParamType.Enum,
+            },
+        ],
+    };
+    const shortRodCommand = {
+        name: "plots:r",
+        description: "Short alias for /rod",
+        permissionLevel: CommandPermissionLevel.Any,
+        cheatsRequired: false,
+        mandatoryParameters: [
+            {
+                name: "plots:rod_direction",
+                type: CustomCommandParamType.Enum,
+            },
+        ],
+    };
     const plotCommand = {
         name: "plots:plot",
         description: "Visit or manage plot destinations",
@@ -132,6 +188,12 @@ system.beforeEvents.startup.subscribe((event) => {
     };
     registry.registerCommand(plotCommand, handlePlotCommand);
     registry.registerCommand(shortPlotCommand, handleShortPlotCommand);
+    registry.registerCommand(lecternCommand, handleLecternCommand);
+    registry.registerCommand(shortLecternCommand, handleLecternCommand);
+    registry.registerCommand(striderCommand, handleStriderCommand);
+    registry.registerCommand(shortStriderCommand, handleStriderCommand);
+    registry.registerCommand(rodCommand, handleRodCommand);
+    registry.registerCommand(shortRodCommand, handleRodCommand);
 });
 function handlePlotCommand(origin, mode, argument, destinationName, x, y, z) {
     switch (mode.toLowerCase()) {
@@ -318,6 +380,58 @@ function dumpDynamicPropertyUsage(player) {
             player.sendMessage(`§8- §f${id}§7: ` +
                 formatDynamicPropertyValue(value));
         }
+    });
+    return success();
+}
+function getCommandPlayer(origin) {
+    const source = origin.sourceEntity;
+    if (!(source instanceof Player)) {
+        return undefined;
+    }
+    return source;
+}
+function handleLecternCommand(origin) {
+    const player = getCommandPlayer(origin);
+    if (player === undefined) {
+        return failure("This command can only be used by a player.");
+    }
+    system.run(() => {
+        player.runCommand("structure load lecturn ~ ~-1 ~");
+    });
+    return success();
+}
+function handleStriderCommand(origin) {
+    const player = getCommandPlayer(origin);
+    if (player === undefined) {
+        return failure("This command can only be used by a player.");
+    }
+    system.run(() => {
+        player.runCommand("structure load strider ~ ~-1 ~");
+    });
+    return success();
+}
+const ROD_DIRECTIONS = {
+    down: 0,
+    up: 1,
+    north: 2,
+    south: 3,
+    west: 4,
+    east: 5,
+};
+function handleRodCommand(origin, direction) {
+    const player = getCommandPlayer(origin);
+    if (player === undefined) {
+        return failure("This command can only be used by a player.");
+    }
+    const directionNumber = ROD_DIRECTIONS[direction.toLowerCase()];
+    if (directionNumber === undefined) {
+        return failure(`Unknown rod direction "${direction}".`);
+    }
+    system.run(() => {
+        player.runCommand("setblock ~ ~-1 ~ " +
+            "minecraft:lightning_rod" +
+            `["powered_bit"=true,` +
+            `"facing_direction"=${directionNumber}]`);
     });
     return success();
 }
