@@ -14,15 +14,46 @@ interface PlotDestination {
     x: number;
     y: number;
     z: number;
+    rx: number;
+    ry: number;
 }
 
 type PlotDestinations = Record<string, PlotDestination>;
 
+interface BackLocation {
+    x: number;
+    y: number;
+    z: number;
+    rx: number;
+    ry: number;
+    dimension: string;
+}
+
+interface PlayerSnapshot extends BackLocation {}
+
+const playerSnapshots = new Map<string, PlayerSnapshot>();
+
+// A movement of at least this many blocks in one tick is treated as a teleport.
+// Increase this if very fast travel causes false positives.
+const TELEPORT_DETECTION_DISTANCE = 8;
+const TELEPORT_DETECTION_DISTANCE_SQUARED =
+    TELEPORT_DETECTION_DISTANCE * TELEPORT_DETECTION_DISTANCE;
+
+
 const STORAGE_KEY = "plots:destinations";
 const HOME_PROPERTY = "plots:home";
+const BACK_PROPERTY = "plots:back";
+const PING_WHITELIST_PROPERTY = "plots:ping_whitelist";
+const PING_BLACKLIST_PROPERTY = "plots:ping_blacklist";
 
 const defaultDestinations: PlotDestinations = {
-    spawn: { x: 0, y: 64, z: 0 },
+    spawn: {
+        x: 0,
+        y: 64,
+        z: 0,
+        rx: 0,
+        ry: 0,
+    },
 };
 
 function normaliseName(name: string): string {
@@ -115,6 +146,17 @@ function translatedOriginFailure(
     return failure(key);
 }
 
+function sendTranslationNow(
+    player: Player,
+    key: string,
+    parameters: string[] = [],
+): void {
+    player.sendMessage({
+        translate: key,
+        with: parameters,
+    });
+}
+
 system.beforeEvents.startup.subscribe((event) => {
     const registry = event.customCommandRegistry;
 
@@ -143,6 +185,16 @@ registry.registerEnum(
         "west",
         "east",
     ],
+);
+
+registry.registerEnum(
+    "plots:ping_list",
+    ["whitelist", "blacklist"],
+);
+
+registry.registerEnum(
+    "plots:ping_action",
+    ["add", "remove", "list", "clear"],
 );
 
 const lecternCommand: CustomCommand = {
@@ -200,6 +252,90 @@ const shortRodCommand: CustomCommand = {
         },
     ],
 };
+
+registry.registerCommand(
+    lecternCommand,
+    handleLecternCommand,
+);
+
+registry.registerCommand(
+    shortLecternCommand,
+    handleLecternCommand,
+);
+
+registry.registerCommand(
+    striderCommand,
+    handleStriderCommand,
+);
+
+registry.registerCommand(
+    shortStriderCommand,
+    handleStriderCommand,
+);
+
+registry.registerCommand(
+    rodCommand,
+    handleRodCommand,
+);
+
+registry.registerCommand(
+    shortRodCommand,
+    handleRodCommand,
+);
+
+const backCommand: CustomCommand = {
+    name: "plots:back",
+    description: "Return to your previous location",
+    permissionLevel: CommandPermissionLevel.Any,
+    cheatsRequired: false,
+};
+
+const shortBackCommand: CustomCommand = {
+    name: "plots:b",
+    description: "Short alias for /back",
+    permissionLevel: CommandPermissionLevel.Any,
+    cheatsRequired: false,
+};
+
+registry.registerCommand(
+    backCommand,
+    handleBackCommand,
+);
+
+registry.registerCommand(
+    shortBackCommand,
+    handleBackCommand,
+);
+
+const pingCommand: CustomCommand = {
+    name: "plots:ping",
+    description: "Manage your personal ping words",
+    permissionLevel: CommandPermissionLevel.Any,
+    cheatsRequired: false,
+
+    mandatoryParameters: [
+        {
+            name: "plots:ping_list",
+            type: CustomCommandParamType.Enum,
+        },
+        {
+            name: "plots:ping_action",
+            type: CustomCommandParamType.Enum,
+        },
+    ],
+
+    optionalParameters: [
+        {
+            name: "phrase",
+            type: CustomCommandParamType.String,
+        },
+    ],
+};
+
+registry.registerCommand(
+    pingCommand,
+    handlePingCommand,
+);
 
     const plotCommand: CustomCommand = {
         name: "plots:plot",
@@ -285,38 +421,96 @@ const shortRodCommand: CustomCommand = {
         handleShortPlotCommand,
     );
     
-    registry.registerCommand(
-    lecternCommand,
-    handleLecternCommand,
-);
-
-registry.registerCommand(
-    shortLecternCommand,
-    handleLecternCommand,
-);
-
-registry.registerCommand(
-    striderCommand,
-    handleStriderCommand,
-);
-
-registry.registerCommand(
-    shortStriderCommand,
-    handleStriderCommand,
-);
-
-registry.registerCommand(
-    rodCommand,
-    handleRodCommand,
-);
-
-registry.registerCommand(
-    shortRodCommand,
-    handleRodCommand,
-);
-
 });
 
+function createPlayerSnapshot(player: Player): PlayerSnapshot {
+    const rotation = player.getRotation();
+
+    return {
+        x: player.location.x,
+        y: player.location.y,
+        z: player.location.z,
+        rx: rotation.x,
+        ry: rotation.y,
+        dimension: player.dimension.id,
+    };
+}
+
+function saveBackSnapshot(
+    player: Player,
+    snapshot: PlayerSnapshot,
+): void {
+    const backLocation: BackLocation = {
+        x: Math.round(snapshot.x),
+        y: Math.round(snapshot.y),
+        z: Math.round(snapshot.z),
+        rx: Math.round(snapshot.rx),
+        ry: Math.round(snapshot.ry),
+        dimension: snapshot.dimension,
+    };
+
+    player.setDynamicProperty(
+        BACK_PROPERTY,
+        JSON.stringify(backLocation),
+    );
+}
+
+function saveCurrentLocationAsBack(player: Player): void {
+    saveBackSnapshot(
+        player,
+        createPlayerSnapshot(player),
+    );
+}
+
+system.runInterval(() => {
+    const activePlayerIds = new Set<string>();
+
+    for (const player of world.getAllPlayers()) {
+        activePlayerIds.add(player.id);
+
+        const current = createPlayerSnapshot(player);
+        const previous = playerSnapshots.get(player.id);
+
+        if (previous !== undefined) {
+            const dimensionChanged =
+                previous.dimension !== current.dimension;
+
+            const dx = current.x - previous.x;
+            const dy = current.y - previous.y;
+            const dz = current.z - previous.z;
+            const distanceSquared =
+                dx * dx + dy * dy + dz * dz;
+
+            if (
+                dimensionChanged ||
+                distanceSquared >=
+                    TELEPORT_DETECTION_DISTANCE_SQUARED
+            ) {
+                saveBackSnapshot(player, previous);
+            }
+        }
+
+        playerSnapshots.set(player.id, current);
+    }
+
+    for (const playerId of playerSnapshots.keys()) {
+        if (!activePlayerIds.has(playerId)) {
+            playerSnapshots.delete(playerId);
+        }
+    }
+}, 1);
+
+function getCommandPlayer(
+    origin: CustomCommandOrigin,
+): Player | undefined {
+    const source = origin.sourceEntity;
+
+    if (source instanceof Player) {
+        return source;
+    }
+
+    return undefined;
+}
 
 function handlePlotCommand(
     origin: CustomCommandOrigin,
@@ -340,6 +534,7 @@ function handlePlotCommand(
 
         case "list":
             return listDestinations(origin);
+
 
         case "admin":
             return handleAdminCommand(
@@ -434,7 +629,21 @@ function visitDestination(
     }
 
     system.run(() => {
-        player.teleport(destination);
+        saveCurrentLocationAsBack(player);
+
+        player.teleport(
+    {
+        x: destination.x,
+        y: destination.y,
+        z: destination.z,
+    },
+    {
+        rotation: {
+            x: destination.rx ?? 0,
+            y: destination.ry ?? 0,
+        },
+    },
+);
 
         player.sendMessage({
             translate: "plots.visit.success",
@@ -470,13 +679,15 @@ function listDestinations(
 
     const list = names
         .map((name) => {
-            const location = destinations[name];
+            const destination = destinations[name];
 
             return (
                 `${name} ` +
-                `(${location.x.toFixed(2)}, ` +
-                `${location.y.toFixed(2)}, ` +
-                `${location.z.toFixed(2)})`
+                `(${destination.x}, ` +
+                `${destination.y}, ` +
+                `${destination.z}) ` +
+                `[${destination.rx ?? 0}, ` +
+                `${destination.ry ?? 0}]`
             );
         })
         .join(", ");
@@ -581,7 +792,21 @@ function teleportHome(
     }
 
     system.run(() => {
-        player.teleport(destination);
+        saveCurrentLocationAsBack(player);
+
+        player.teleport(
+    {
+        x: destination.x,
+        y: destination.y,
+        z: destination.z,
+    },
+    {
+        rotation: {
+            x: destination.rx ?? 0,
+            y: destination.ry ?? 0,
+        },
+    },
+);
 
         player.sendMessage({
             translate: "plots.home.teleported",
@@ -640,73 +865,169 @@ function dumpDynamicPropertyUsage(
         world.getDynamicPropertyTotalByteCount();
 
     system.run(() => {
-        player.sendMessage("§6World dynamic-property debug");
-        player.sendMessage(
-            `§7Properties: §f${propertyIds.length}`,
+        sendTranslationNow(
+            player,
+            "plots.debug.header",
         );
-        player.sendMessage(
-            `§7Total storage: §f${formatBytes(totalBytes)} ` +
-            `§8(${totalBytes} bytes)`,
+
+        sendTranslationNow(
+            player,
+            "plots.debug.property_count",
+            [String(propertyIds.length)],
+        );
+
+        sendTranslationNow(
+            player,
+            "plots.debug.total_storage",
+            [
+                formatBytes(totalBytes),
+                String(totalBytes),
+            ],
         );
 
         if (propertyIds.length === 0) {
-            player.sendMessage(
-                "§7No world dynamic properties are stored.",
+            sendTranslationNow(
+                player,
+                "plots.debug.empty",
+            );
+        } else {
+            sendTranslationNow(
+                player,
+                "plots.debug.properties_header",
             );
 
-            return;
+            for (const id of propertyIds) {
+                const value =
+                    world.getDynamicProperty(id);
+
+                sendTranslationNow(
+                    player,
+                    "plots.debug.property",
+                    [
+                        id,
+                        formatDynamicPropertyValue(value),
+                    ],
+                );
+            }
         }
 
-        player.sendMessage("§7Stored properties:");
-
-        for (const id of propertyIds) {
-            const value = world.getDynamicProperty(id);
-
-            player.sendMessage(
-                `§8- §f${id}§7: ` +
-                formatDynamicPropertyValue(value),
-            );
-        }
+        const playerPropertyIds = player
+            .getDynamicPropertyIds()
+            .sort();
 
         const playerBytes =
             player.getDynamicPropertyTotalByteCount();
 
-        const playerPropertyIds =
-            player.getDynamicPropertyIds().sort();
-
-        player.sendMessage("");
-        player.sendMessage("§6Your player properties");
-        player.sendMessage(
-            `§7Properties: §f${playerPropertyIds.length}`,
-        );
-        player.sendMessage(
-            `§7Total storage: §f${formatBytes(playerBytes)} ` +
-            `§8(${playerBytes} bytes)`,
+        sendTranslationNow(
+            player,
+            "plots.debug.player_header",
         );
 
-        for (const id of playerPropertyIds) {
-            const value = player.getDynamicProperty(id);
+        sendTranslationNow(
+            player,
+            "plots.debug.player_property_count",
+            [String(playerPropertyIds.length)],
+        );
 
-            player.sendMessage(
-                `§8- §f${id}§7: ` +
-                formatDynamicPropertyValue(value),
+        sendTranslationNow(
+            player,
+            "plots.debug.player_total_storage",
+            [
+                formatBytes(playerBytes),
+                String(playerBytes),
+            ],
+        );
+
+        if (playerPropertyIds.length === 0) {
+            sendTranslationNow(
+                player,
+                "plots.debug.player_empty",
             );
+        } else {
+            for (const id of playerPropertyIds) {
+                const value =
+                    player.getDynamicProperty(id);
+
+                sendTranslationNow(
+                    player,
+                    "plots.debug.player_property",
+                    [
+                        id,
+                        formatDynamicPropertyValue(value),
+                    ],
+                );
+            }
         }
     });
 
     return success();
 }
 
-function getCommandPlayer(
+function handleBackCommand(
     origin: CustomCommandOrigin,
-): Player | undefined {
-    const source = origin.sourceEntity;
+): CustomCommandResult {
+    const player = getCommandPlayer(origin);
 
-    if (!(source instanceof Player)) {
-        return undefined;
+    if (player === undefined) {
+        return failure(
+            "This command can only be used by a player.",
+        );
     }
 
-    return source;
+    const storedBack =
+        player.getDynamicProperty(BACK_PROPERTY);
+
+    if (typeof storedBack !== "string") {
+        return translatedFailure(
+            player,
+            "plots.back.none",
+        );
+    }
+
+    let back: BackLocation;
+
+    try {
+        back = JSON.parse(storedBack) as BackLocation;
+    } catch {
+        return translatedFailure(
+            player,
+            "plots.back.invalid",
+        );
+    }
+
+    system.run(() => {
+        try {
+            player.teleport(
+                {
+                    x: back.x,
+                    y: back.y,
+                    z: back.z,
+                },
+                {
+                    dimension: world.getDimension(
+                        back.dimension,
+                    ),
+                    rotation: {
+                        x: back.rx,
+                        y: back.ry,
+                    },
+                },
+            );
+
+            sendTranslationNow(
+                player,
+                "plots.back.success",
+            );
+        } catch (error) {
+            sendTranslationNow(
+                player,
+                "plots.back.failure",
+                [String(error)],
+            );
+        }
+    });
+
+    return success();
 }
 
 function handleLecternCommand(
@@ -721,9 +1042,22 @@ function handleLecternCommand(
     }
 
     system.run(() => {
-        player.runCommand(
-            "structure load lecturn ~ ~-1 ~",
-        );
+        try {
+            player.runCommand(
+                "structure load lecturn ~ ~-1 ~",
+            );
+
+            sendTranslationNow(
+                player,
+                "plots.lectern.success",
+            );
+        } catch (error) {
+            sendTranslationNow(
+                player,
+                "plots.lectern.failure",
+                [String(error)],
+            );
+        }
     });
 
     return success();
@@ -741,22 +1075,26 @@ function handleStriderCommand(
     }
 
     system.run(() => {
-        player.runCommand(
-            "structure load strider ~ ~-1 ~",
-        );
+        try {
+            player.runCommand(
+                "structure load strider ~ ~-1 ~",
+            );
+
+            sendTranslationNow(
+                player,
+                "plots.strider.success",
+            );
+        } catch (error) {
+            sendTranslationNow(
+                player,
+                "plots.strider.failure",
+                [String(error)],
+            );
+        }
     });
 
     return success();
 }
-
-const ROD_DIRECTIONS: Record<string, number> = {
-    down: 0,
-    up: 1,
-    north: 2,
-    south: 3,
-    west: 4,
-    east: 5,
-};
 
 function handleRodCommand(
     origin: CustomCommandOrigin,
@@ -770,22 +1108,46 @@ function handleRodCommand(
         );
     }
 
+    const directionNumbers: Record<string, number> = {
+        down: 0,
+        up: 1,
+        north: 2,
+        south: 3,
+        west: 4,
+        east: 5,
+    };
+
+    const normalisedDirection =
+        direction.toLowerCase();
+
     const directionNumber =
-        ROD_DIRECTIONS[direction.toLowerCase()];
+        directionNumbers[normalisedDirection];
 
     if (directionNumber === undefined) {
-        return failure(
-            `Unknown rod direction "${direction}".`,
+        return translatedFailure(
+            player,
+            "plots.rod.unknown_direction",
+            [direction],
         );
     }
 
     system.run(() => {
-        player.runCommand(
-            "setblock ~ ~-1 ~ " +
-            "minecraft:lightning_rod" +
-            `["powered_bit"=true,` +
-            `"facing_direction"=${directionNumber}]`,
-        );
+        try {
+            player.runCommand(
+                `setblock ~ ~-1 ~ minecraft:lightning_rod` +
+                `["powered_bit"=true,"facing_direction"=${directionNumber}]`,
+            );
+
+            player.sendMessage({
+                translate: "plots.rod.success",
+                with: [normalisedDirection],
+            });
+        } catch (error) {
+            player.sendMessage({
+                translate: "plots.rod.failure",
+                with: [String(error)],
+            });
+        }
     });
 
     return success();
@@ -825,46 +1187,52 @@ function handleAdminCommand(
 
     switch (action.toLowerCase()) {
         case "set": {
-            if (destinationName === undefined) {
-                return translatedFailure(
-                    player,
-                    "plots.admin.set_usage",
-                );
-            }
+    if (destinationName === undefined) {
+        return translatedFailure(
+            player,
+            "plots.admin.set_usage",
+        );
+    }
 
-            const location = player.location;
+    const location = player.location;
+    const rotation = player.getRotation();
 
-            const finalX = x ?? location.x;
-            const finalY = y ?? location.y;
-            const finalZ = z ?? location.z;
+    const finalX = Math.round(x ?? location.x);
+    const finalY = Math.round(y ?? location.y);
+    const finalZ = Math.round(z ?? location.z);
 
-            const key = normaliseName(destinationName);
-            const alreadyExists =
-                destinations[key] !== undefined;
+    const finalRotationX = Math.round(rotation.x);
+    const finalRotationY = Math.round(rotation.y);
 
-            destinations[key] = {
-                x: finalX,
-                y: finalY,
-                z: finalZ,
-            };
+    const key = normaliseName(destinationName);
+    const alreadyExists =
+        destinations[key] !== undefined;
 
-            system.run(() => {
-                saveDestinations(destinations);
-            });
+    destinations[key] = {
+        x: finalX,
+        y: finalY,
+        z: finalZ,
+        rx: finalRotationX,
+        ry: finalRotationY,
+    };
 
-            return translatedSuccess(
-                player,
-                alreadyExists
-                    ? "plots.admin.updated"
-                    : "plots.admin.added",
-                [
-                    key,
-                    finalX.toFixed(2),
-                    finalY.toFixed(2),
-                    finalZ.toFixed(2),
-                ],
-            );
-        }
+    system.run(() => {
+        saveDestinations(destinations);
+    });
+
+    return translatedSuccess(
+        player,
+        alreadyExists
+            ? "plots.admin.updated"
+            : "plots.admin.added",
+        [
+            key,
+            String(finalX),
+            String(finalY),
+            String(finalZ),
+        ],
+    );
+}
 
         case "remove": {
             if (destinationName === undefined) {
@@ -907,4 +1275,335 @@ function handleAdminCommand(
                 [action],
             );
     }
+}
+
+interface PingRules {
+    whitelist: string[];
+    blacklist: string[];
+}
+
+type PingListType = "whitelist" | "blacklist";
+type PingAction = "add" | "remove" | "list" | "clear";
+
+const PING_SOUND = "random.orb";
+
+function normalisePingPhrase(phrase: string): string {
+    return phrase.trim().toLowerCase();
+}
+
+function loadPingList(
+    player: Player,
+    propertyId: string,
+): string[] {
+    const stored = player.getDynamicProperty(propertyId);
+
+    if (typeof stored !== "string") {
+        return [];
+    }
+
+    try {
+        const parsed = JSON.parse(stored);
+
+        if (!Array.isArray(parsed)) {
+            return [];
+        }
+
+        return parsed
+            .filter((value): value is string =>
+                typeof value === "string",
+            )
+            .map(normalisePingPhrase)
+            .filter((value) => value.length > 0);
+    } catch {
+        return [];
+    }
+}
+
+function savePingList(
+    player: Player,
+    propertyId: string,
+    values: string[],
+): void {
+    const uniqueValues = [...new Set(
+        values
+            .map(normalisePingPhrase)
+            .filter((value) => value.length > 0),
+    )];
+
+    if (uniqueValues.length === 0) {
+        player.setDynamicProperty(propertyId, undefined);
+        return;
+    }
+
+    player.setDynamicProperty(
+        propertyId,
+        JSON.stringify(uniqueValues),
+    );
+}
+
+function getPingListProperty(
+    listType: PingListType,
+): string {
+    return listType === "whitelist"
+        ? PING_WHITELIST_PROPERTY
+        : PING_BLACKLIST_PROPERTY;
+}
+
+function getPingRules(player: Player): PingRules {
+    return {
+        whitelist: loadPingList(
+            player,
+            PING_WHITELIST_PROPERTY,
+        ),
+        blacklist: loadPingList(
+            player,
+            PING_BLACKLIST_PROPERTY,
+        ),
+    };
+}
+
+function handlePingCommand(
+    origin: CustomCommandOrigin,
+    listTypeArgument: string,
+    actionArgument: string,
+    phraseArgument?: string,
+): CustomCommandResult {
+    const player = getCommandPlayer(origin);
+
+    if (player === undefined) {
+        return failure(
+            "This command can only be used by a player.",
+        );
+    }
+
+    const listType =
+        listTypeArgument.toLowerCase() as PingListType;
+
+    const action =
+        actionArgument.toLowerCase() as PingAction;
+
+    if (
+        listType !== "whitelist" &&
+        listType !== "blacklist"
+    ) {
+        return translatedFailure(
+            player,
+            "plots.ping.unknown_list",
+            [listTypeArgument],
+        );
+    }
+
+    const propertyId = getPingListProperty(listType);
+    const values = loadPingList(player, propertyId);
+
+    switch (action) {
+        case "add": {
+            if (phraseArgument === undefined) {
+                return translatedFailure(
+                    player,
+                    "plots.ping.phrase_required",
+                );
+            }
+
+            const phrase =
+                normalisePingPhrase(phraseArgument);
+
+            if (phrase.length === 0) {
+                return translatedFailure(
+                    player,
+                    "plots.ping.phrase_required",
+                );
+            }
+
+            if (values.includes(phrase)) {
+                return translatedFailure(
+                    player,
+                    "plots.ping.already_exists",
+                    [phrase, listType],
+                );
+            }
+
+            system.run(() => {
+                savePingList(
+                    player,
+                    propertyId,
+                    [...values, phrase],
+                );
+            });
+
+            return translatedSuccess(
+                player,
+                "plots.ping.added",
+                [phrase, listType],
+            );
+        }
+
+        case "remove": {
+            if (phraseArgument === undefined) {
+                return translatedFailure(
+                    player,
+                    "plots.ping.phrase_required",
+                );
+            }
+
+            const phrase =
+                normalisePingPhrase(phraseArgument);
+
+            if (!values.includes(phrase)) {
+                return translatedFailure(
+                    player,
+                    "plots.ping.not_found",
+                    [phrase, listType],
+                );
+            }
+
+            system.run(() => {
+                savePingList(
+                    player,
+                    propertyId,
+                    values.filter(
+                        (value) => value !== phrase,
+                    ),
+                );
+            });
+
+            return translatedSuccess(
+                player,
+                "plots.ping.removed",
+                [phrase, listType],
+            );
+        }
+
+        case "list": {
+            if (values.length === 0) {
+                return translatedSuccess(
+                    player,
+                    "plots.ping.list_empty",
+                    [listType],
+                );
+            }
+
+            return translatedSuccess(
+                player,
+                "plots.ping.list",
+                [
+                    listType,
+                    values.join(", "),
+                ],
+            );
+        }
+
+        case "clear": {
+            system.run(() => {
+                player.setDynamicProperty(
+                    propertyId,
+                    undefined,
+                );
+            });
+
+            return translatedSuccess(
+                player,
+                "plots.ping.cleared",
+                [listType],
+            );
+        }
+
+        default:
+            return translatedFailure(
+                player,
+                "plots.ping.unknown_action",
+                [actionArgument],
+            );
+    }
+}
+
+world.beforeEvents.chatSend.subscribe((event) => {
+    const sender = event.sender;
+    const message = event.message;
+
+    /*
+     * Chat before-events run in restricted execution, so defer
+     * playing sounds until the next tick.
+     */
+    system.run(() => {
+        processPings(sender, message);
+    });
+});
+
+function processPings(
+    sender: Player,
+    message: string,
+): void {
+    for (const target of world.getAllPlayers()) {
+        // Do not allow players to ping themselves.
+        if (target.id === sender.id) {
+            continue;
+        }
+
+        const rules = getPingRules(target);
+
+        if (!shouldPingPlayer(message, target, rules)) {
+            continue;
+        }
+
+        target.playSound(PING_SOUND, {
+            volume: 1,
+            pitch: 1,
+        });
+    }
+}
+
+function shouldPingPlayer(
+    message: string,
+    target: Player,
+    rules: PingRules,
+): boolean {
+    /*
+     * A blacklisted phrase suppresses the ping for this player,
+     * even when another valid trigger is also present.
+     */
+    const containsBlacklistedTerm = rules.blacklist.some(
+        (term) => containsPingTerm(message, term),
+    );
+
+    if (containsBlacklistedTerm) {
+        return false;
+    }
+
+    // Every player's normal @name mention works automatically.
+    if (containsPingTerm(message, `@${target.name}`)) {
+        return true;
+    }
+
+    // Personal whitelist entries also trigger a ping.
+    return rules.whitelist.some(
+        (term) => containsPingTerm(message, term),
+    );
+}
+
+function containsPingTerm(
+    message: string,
+    term: string,
+): boolean {
+    const cleanedTerm = term.trim();
+
+    if (cleanedTerm.length === 0) {
+        return false;
+    }
+
+    const pattern = new RegExp(
+        `(^|[^\\p{L}\\p{N}_])` +
+        `${escapePingRegex(cleanedTerm)}` +
+        `(?=$|[^\\p{L}\\p{N}_])`,
+        "iu",
+    );
+
+    return pattern.test(message);
+}
+
+function escapePingRegex(text: string): string {
+    return text.replace(
+        /[.*+?^${}()|[\]\\]/g,
+        "\\$&",
+    );
 }
