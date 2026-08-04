@@ -1519,16 +1519,99 @@ function handlePingCommand(
 
 world.beforeEvents.chatSend.subscribe((event) => {
     const sender = event.sender;
-    const message = event.message;
+    const originalMessage = event.message;
 
-    /*
-     * Chat before-events run in restricted execution, so defer
-     * playing sounds until the next tick.
-     */
+    event.cancel = true;
+
     system.run(() => {
-        processPings(sender, message);
+        let formattedMessage = originalMessage;
+
+        for (const target of world.getAllPlayers()) {
+            const rules = getPingRules(target);
+
+            const matchedTerms = getMatchedPingTerms(
+                originalMessage,
+                target,
+                rules,
+            );
+
+            if (matchedTerms.length === 0) {
+                continue;
+            }
+
+            for (const term of matchedTerms) {
+                formattedMessage = highlightPingTerm(
+                    formattedMessage,
+                    term,
+                );
+            }
+
+            if (target.id !== sender.id) {
+                target.runCommand(
+                    "playsound random.orb @s ~ ~ ~ 1 1",
+                );
+            }
+        }
+
+        world.sendMessage(
+            `<${sender.name}> ${formattedMessage}`,
+        );
     });
 });
+
+function getMatchedPingTerms(
+    message: string,
+    target: Player,
+    rules: PingRules,
+): string[] {
+    const matchedTerms: string[] = [];
+
+    const containsBlacklistedTerm =
+        rules.blacklist.some(
+            (term) => containsPingTerm(message, term),
+        );
+
+    if (containsBlacklistedTerm) {
+        return matchedTerms;
+    }
+
+    const playerMention = `@${target.name}`;
+
+    if (containsPingTerm(message, playerMention)) {
+        matchedTerms.push(playerMention);
+    }
+
+    for (const term of rules.whitelist) {
+        if (containsPingTerm(message, term)) {
+            matchedTerms.push(term);
+        }
+    }
+
+    return matchedTerms;
+}
+
+function highlightPingTerm(
+    message: string,
+    term: string,
+): string {
+    const cleanedTerm = term.trim();
+
+    if (cleanedTerm.length === 0) {
+        return message;
+    }
+
+    const pattern = new RegExp(
+        `(^|[^\\p{L}\\p{N}_])` +
+        `(${escapePingRegex(cleanedTerm)})` +
+        `(?=$|[^\\p{L}\\p{N}_])`,
+        "giu",
+    );
+
+    return message.replace(
+        pattern,
+        `$1§e$2§r`,
+    );
+}
 
 function processPings(
     sender: Player,

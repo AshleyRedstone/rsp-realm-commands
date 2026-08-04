@@ -26,3 +26,53 @@ plots.admin.unknown_action=Óþekkt stjórnunaraðgerð „%1“.
 
 plots.command.unknown=Óþekkt plotskipun „%1“.
 plots.command.unknown_alias=Óþekkt stytting plotskipunar „%1“.
+
+plots.command.player_only=Aðeins leikmaður getur notað þessa skipun.
+
+plots.lectern.success=§aLespúltsbyggingin var hlaðin.
+plots.lectern.failure=§cEkki tókst að hlaða lespúltsbyggingunni: %1
+
+plots.strider.success=§aStriderbyggingin var hlaðin.
+plots.strider.failure=§cEkki tókst að hlaða striderbyggingunni: %1
+
+plots.rod.success=§aKveiktum eldingavara sem snýr í áttina %1 var komið fyrir.
+plots.rod.failure=§cEkki tókst að koma eldingavaranum fyrir: %1
+plots.rod.unknown_direction=§cÓþekkt stefna eldingavara: „%1“.
+
+plots.debug.header=§6Villuleit kvikra heimseiginleika
+plots.debug.property_count=§7Eiginleikar: §f%1
+plots.debug.total_storage=§7Heildargagnanotkun: §f%1 §8(%2 bæti)
+plots.debug.empty=§7Engir kvikir heimseiginleikar eru geymdir.
+plots.debug.properties_header=§7Geymdir eiginleikar:
+plots.debug.property=§8- §f%1§7: %2
+
+plots.debug.player_header=§6Kvikir leikmannseiginleikar þínir
+plots.debug.player_property_count=§7Eiginleikar: §f%1
+plots.debug.player_total_storage=§7Heildargagnanotkun: §f%1 §8(%2 bæti)
+plots.debug.player_empty=§7Þú hefur enga kvika leikmannseiginleika.
+plots.debug.player_property=§8- §f%1§7: %2
+
+plots.direction.down=niður
+plots.direction.up=upp
+plots.direction.north=norður
+plots.direction.south=suður
+plots.direction.west=vestur
+plots.direction.east=austur
+
+plots.back.none=Þú átt engan fyrri stað til að fara aftur á.
+plots.back.invalid=Vistaða skilastaðsetningin þín er ógild.
+plots.back.success=§aÞú varst færð/ur aftur á fyrri stað.
+plots.back.failure=§cGat ekki farið aftur á fyrri staðsetningu: %1
+
+plots.ping.unknown_list=Óþekktur ping listi "%1".
+plots.ping.unknown_action=Óþekkt ping aðgerð "%1".
+plots.ping.phrase_required=Sláðu inn orð eða orðasamband.
+plots.ping.already_exists="%1" er þegar í %2 þínum.
+plots.ping.not_found="%1" er ekki í %2 þínum.
+plots.ping.added=Bætti "%1" við %2 þinn.
+plots.ping.removed=Fjarlægði "%1" úr %2 þínum.
+plots.ping.list_empty=Þinn %1 er tómur.
+plots.ping.list=Þinn %1: %2
+plots.ping.cleared=Hreinsaði þinn %1.
+plots.ping.whitelist=hvítlisti
+plots.ping.blacklist=svartur listi

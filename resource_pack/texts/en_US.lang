@@ -2,7 +2,7 @@ plots.error.player_only=This command can only be used by a player.
 plots.error.no_permission=You do not have permission to manage plots.
 
 plots.visit.usage=Usage: /plot visit <destination>
-plots.visit.unknown=Unknown destination "%1".
+plots.visit.unknown=Unknown destination "%1" aiwdjoiawjdoijoijwdaowdjiawdoij.
 plots.visit.success=§aTeleported to §f%1§a.
 
 plots.list.empty=There are no plot destinations.
@@ -26,3 +26,53 @@ plots.admin.unknown_action=Unknown admin action "%1".
 
 plots.command.unknown=Unknown plot subcommand "%1".
 plots.command.unknown_alias=Unknown plot alias "%1".
+
+plots.command.player_only=This command can only be used by a player.
+
+plots.lectern.success=§aLoaded the lectern structure.
+plots.lectern.failure=§cCould not load the lectern structure: %1
+
+plots.strider.success=§aLoaded the strider structure.
+plots.strider.failure=§cCould not load the strider structure: %1
+
+plots.rod.success=§aPlaced a powered lightning rod facing %1.
+plots.rod.failure=§cCould not place the lightning rod: %1
+plots.rod.unknown_direction=§cUnknown rod direction "%1".
+
+plots.debug.header=§6World dynamic-property debug
+plots.debug.property_count=§7Properties: §f%1
+plots.debug.total_storage=§7Total storage: §f%1 §8(%2 bytes)
+plots.debug.empty=§7No world dynamic properties are stored.
+plots.debug.properties_header=§7Stored properties:
+plots.debug.property=§8- §f%1§7: %2
+
+plots.debug.player_header=§6Your player properties
+plots.debug.player_property_count=§7Properties: §f%1
+plots.debug.player_total_storage=§7Total storage: §f%1 §8(%2 bytes)
+plots.debug.player_empty=§7You have no player dynamic properties.
+plots.debug.player_property=§8- §f%1§7: %2
+
+plots.direction.down=down
+plots.direction.up=up
+plots.direction.north=north
+plots.direction.south=south
+plots.direction.west=west
+plots.direction.east=east
+
+plots.back.none=You have nowhere to return to.
+plots.back.invalid=Your saved return location is invalid.
+plots.back.success=§aReturned to your previous location.
+plots.back.failure=§cCould not return to your previous location: %1
+
+plots.ping.unknown_list=Unknown ping list "%1".
+plots.ping.unknown_action=Unknown ping action "%1".
+plots.ping.phrase_required=Enter a word or phrase.
+plots.ping.already_exists="%1" is already in your %2.
+plots.ping.not_found="%1" is not in your %2.
+plots.ping.added=Added "%1" to your %2.
+plots.ping.removed=Removed "%1" from your %2.
+plots.ping.list_empty=Your %1 is empty.
+plots.ping.list=Your %1: %2
+plots.ping.cleared=Cleared your %1.
+plots.ping.whitelist=whitelist
+plots.ping.blacklist=blacklist
