@@ -1,20 +1,16 @@
 plots.error.player_only=此指令仅限玩家使用。
 plots.error.no_permission=您没有权限管理地皮。
-
 plots.visit.usage=用法：/plot visit <目的地>
 plots.visit.unknown=未知目的地"%1"。
 plots.visit.success=§a您成功传送至§f%1§a。
-
 plots.list.empty=暂无地皮目的地。
 plots.list.header=目的地：%1
-
 plots.home.not_set=您尚未选择家。使用 /plot home set <目的地>。
 plots.home.usage=用法：/plot home set <目的地>
 plots.home.unknown_action=未知的home操作"%1"。用法：/plot home [set <目的地>]
 plots.home.set=您的家已设置为"%1".
 plots.home.deleted=您的家"%1"不再存在。选择另一个请使用 /plot home set <目的地>。
 plots.home.teleported=§a您已传送至§f%1§a。
-
 plots.admin.usage=用法：/plot admin <set|remove|debug>
 plots.admin.set_usage=用法：/plot admin set <目的地> [x] [y] [z]
 plots.admin.remove_usage=用法：/plot admin remove <目的地>
@@ -23,29 +19,22 @@ plots.admin.updated=在%2, %3, %4处更新了"%1"。
 plots.admin.missing=目的地"%1"不存在。
 plots.admin.removed=已移除目的地"%1"。
 plots.admin.unknown_action=未知的admin操作"%1"。
-
 plots.command.unknown=未知的地皮子指令"%1"。
 plots.command.unknown_alias=未知的地皮别名"%1"。
-
 plots.command.player_only=此指令仅限玩家使用。
-
 plots.lectern.success=§a成功加载了讲台结构。
 plots.lectern.failure=§c无法加载讲台结构：%1
-
 plots.strider.success=§a成功加载了炽足兽结构。
 plots.strider.failure=§c无法加载炽足兽结构：%1
-
 plots.rod.success=§a成功放置了一个朝向%1的通电避雷针。
 plots.rod.failure=§c无法放置避雷针：%1
 plots.rod.unknown_direction=§c未知的避雷针方向"%1"。
-
 plots.debug.header=§6世界动态属性调试
 plots.debug.property_count=§7属性：§f%1
 plots.debug.total_storage=§7总存储空间：§f%1§8（%2位元組）
 plots.debug.empty=§7未存储任何世界动态属性。
 plots.debug.properties_header=§7已存储属性：
 plots.debug.property=§8- §f%1§7：%2
-
 plots.debug.player_header=§6您的玩家属性
 plots.debug.player_property_count=§7属性：§f%1
 plots.debug.player_total_storage=§7总存储空间：§f%1 §8（%2位元組）
@@ -57,7 +46,6 @@ plots.direction.north=北
 plots.direction.south=南
 plots.direction.west=西
 plots.direction.east=东
-
 plots.back.none=You have nowhere to return to.
 plots.back.invalid=Your saved return location is invalid.
 plots.back.success=§aReturned to your previous location.
