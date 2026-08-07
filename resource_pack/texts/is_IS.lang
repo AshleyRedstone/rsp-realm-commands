@@ -62,3 +62,6 @@ plots.ping.list=Þinn %1: %2
 plots.ping.cleared=Hreinsaði þinn %1.
 plots.ping.whitelist=hvítlisti
 plots.ping.blacklist=svartur listi
+plots.ping.action_required=
+plots.ping.enabled=
+plots.ping.disabled=

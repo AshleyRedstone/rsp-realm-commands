@@ -50,3 +50,6 @@ plots.back.none=
 plots.back.invalid=
 plots.back.success=
 plots.back.failure=
+plots.ping.action_required=
+plots.ping.enabled=
+plots.ping.disabled=
