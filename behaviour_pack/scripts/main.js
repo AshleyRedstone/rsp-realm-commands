@@ -7,6 +7,7 @@ const HOME_PROPERTY = "plots:home";
 const BACK_PROPERTY = "plots:back";
 const PING_WHITELIST_PROPERTY = "plots:ping_whitelist";
 const PING_BLACKLIST_PROPERTY = "plots:ping_blacklist";
+const PING_ENABLED_PROPERTY = "plots:ping_enabled";
 const defaultDestinations = {
     spawn: {
         x: 0,
@@ -88,8 +89,17 @@ system.beforeEvents.startup.subscribe((event) => {
         "west",
         "east",
     ]);
-    registry.registerEnum("plots:ping_list", ["whitelist", "blacklist"]);
-    registry.registerEnum("plots:ping_action", ["add", "remove", "list", "clear"]);
+    registry.registerEnum("plots:ping_mode", [
+        "whitelist",
+        "blacklist",
+        "toggle",
+    ]);
+    registry.registerEnum("plots:ping_action", [
+        "add",
+        "remove",
+        "list",
+        "clear",
+    ]);
     const lecternCommand = {
         name: "plots:lectern",
         description: "Load the lectern structure",
@@ -160,20 +170,20 @@ system.beforeEvents.startup.subscribe((event) => {
     registry.registerCommand(shortBackCommand, handleBackCommand);
     const pingCommand = {
         name: "plots:ping",
-        description: "Manage your personal ping words",
+        description: "Manage your ping settings",
         permissionLevel: CommandPermissionLevel.Any,
         cheatsRequired: false,
         mandatoryParameters: [
             {
-                name: "plots:ping_list",
-                type: CustomCommandParamType.Enum,
-            },
-            {
-                name: "plots:ping_action",
+                name: "plots:ping_mode",
                 type: CustomCommandParamType.Enum,
             },
         ],
         optionalParameters: [
+            {
+                name: "plots:ping_action",
+                type: CustomCommandParamType.Enum,
+            },
             {
                 name: "phrase",
                 type: CustomCommandParamType.String,
@@ -310,18 +320,87 @@ function getCommandPlayer(origin) {
     }
     return undefined;
 }
-function handlePlotCommand(origin, mode, argument, destinationName, x, y, z) {
-    switch (mode.toLowerCase()) {
-        case "visit":
-            return visitDestination(origin, argument);
-        case "home":
-            return handleHomeCommand(origin, argument, destinationName);
-        case "list":
-            return listDestinations(origin);
-        case "admin":
-            return handleAdminCommand(origin, argument, destinationName, x, y, z);
+function handlePingCommand(origin, modeArgument, actionArgument, phraseArgument) {
+    const player = getCommandPlayer(origin);
+    if (player === undefined) {
+        return failure("This command can only be used by a player.");
+    }
+    const mode = modeArgument.toLowerCase();
+    if (mode === "toggle") {
+        const stored = player.getDynamicProperty(PING_ENABLED_PROPERTY);
+        const currentlyEnabled = typeof stored === "boolean"
+            ? stored
+            : true;
+        const newValue = !currentlyEnabled;
+        system.run(() => {
+            player.setDynamicProperty(PING_ENABLED_PROPERTY, newValue);
+        });
+        return translatedSuccess(player, newValue
+            ? "plots.ping.enabled"
+            : "plots.ping.disabled");
+    }
+    if (mode !== "whitelist" &&
+        mode !== "blacklist") {
+        return translatedFailure(player, "plots.ping.unknown_list", [modeArgument]);
+    }
+    if (actionArgument === undefined) {
+        return translatedFailure(player, "plots.ping.action_required");
+    }
+    const action = actionArgument.toLowerCase();
+    const propertyId = mode === "whitelist"
+        ? PING_WHITELIST_PROPERTY
+        : PING_BLACKLIST_PROPERTY;
+    const values = loadPingList(player, propertyId);
+    switch (action) {
+        case "add": {
+            if (phraseArgument === undefined) {
+                return translatedFailure(player, "plots.ping.phrase_required");
+            }
+            const phrase = normalisePingPhrase(phraseArgument);
+            if (phrase.length === 0) {
+                return translatedFailure(player, "plots.ping.phrase_required");
+            }
+            if (values.includes(phrase)) {
+                return translatedFailure(player, "plots.ping.already_exists", [phrase, mode]);
+            }
+            system.run(() => {
+                savePingList(player, propertyId, [
+                    ...values,
+                    phrase,
+                ]);
+            });
+            return translatedSuccess(player, "plots.ping.added", [phrase, mode]);
+        }
+        case "remove": {
+            if (phraseArgument === undefined) {
+                return translatedFailure(player, "plots.ping.phrase_required");
+            }
+            const phrase = normalisePingPhrase(phraseArgument);
+            if (!values.includes(phrase)) {
+                return translatedFailure(player, "plots.ping.not_found", [phrase, mode]);
+            }
+            system.run(() => {
+                savePingList(player, propertyId, values.filter((value) => value !== phrase));
+            });
+            return translatedSuccess(player, "plots.ping.removed", [phrase, mode]);
+        }
+        case "list": {
+            if (values.length === 0) {
+                return translatedSuccess(player, "plots.ping.list_empty", [mode]);
+            }
+            return translatedSuccess(player, "plots.ping.list", [
+                mode,
+                values.join(", "),
+            ]);
+        }
+        case "clear": {
+            system.run(() => {
+                player.setDynamicProperty(propertyId, undefined);
+            });
+            return translatedSuccess(player, "plots.ping.cleared", [mode]);
+        }
         default:
-            return translatedOriginFailure(origin, "plots.command.unknown", [mode]);
+            return translatedFailure(player, "plots.ping.unknown_action", [actionArgument]);
     }
 }
 function handleShortPlotCommand(origin, mode, argument, destinationName, x, y, z) {
@@ -749,68 +828,6 @@ function getPingRules(player) {
         blacklist: loadPingList(player, PING_BLACKLIST_PROPERTY),
     };
 }
-function handlePingCommand(origin, listTypeArgument, actionArgument, phraseArgument) {
-    const player = getCommandPlayer(origin);
-    if (player === undefined) {
-        return failure("This command can only be used by a player.");
-    }
-    const listType = listTypeArgument.toLowerCase();
-    const action = actionArgument.toLowerCase();
-    if (listType !== "whitelist" &&
-        listType !== "blacklist") {
-        return translatedFailure(player, "plots.ping.unknown_list", [listTypeArgument]);
-    }
-    const propertyId = getPingListProperty(listType);
-    const values = loadPingList(player, propertyId);
-    switch (action) {
-        case "add": {
-            if (phraseArgument === undefined) {
-                return translatedFailure(player, "plots.ping.phrase_required");
-            }
-            const phrase = normalisePingPhrase(phraseArgument);
-            if (phrase.length === 0) {
-                return translatedFailure(player, "plots.ping.phrase_required");
-            }
-            if (values.includes(phrase)) {
-                return translatedFailure(player, "plots.ping.already_exists", [phrase, listType]);
-            }
-            system.run(() => {
-                savePingList(player, propertyId, [...values, phrase]);
-            });
-            return translatedSuccess(player, "plots.ping.added", [phrase, listType]);
-        }
-        case "remove": {
-            if (phraseArgument === undefined) {
-                return translatedFailure(player, "plots.ping.phrase_required");
-            }
-            const phrase = normalisePingPhrase(phraseArgument);
-            if (!values.includes(phrase)) {
-                return translatedFailure(player, "plots.ping.not_found", [phrase, listType]);
-            }
-            system.run(() => {
-                savePingList(player, propertyId, values.filter((value) => value !== phrase));
-            });
-            return translatedSuccess(player, "plots.ping.removed", [phrase, listType]);
-        }
-        case "list": {
-            if (values.length === 0) {
-                return translatedSuccess(player, "plots.ping.list_empty", [listType]);
-            }
-            return translatedSuccess(player, "plots.ping.list", [
-                listType,
-                values.join(", "),
-            ]);
-        }
-        case "clear": {
-            system.run(() => {
-                player.setDynamicProperty(propertyId, undefined);
-            });
-            return translatedSuccess(player, "plots.ping.cleared", [listType]);
-        }
-        default:
-            return translatedFailure(player, "plots.ping.unknown_action", [actionArgument]);
-    }
-}
 world.beforeEvents.chatSend.subscribe((event) => {
     const sender = event.sender;
     const originalMessage = event.message;
@@ -818,6 +835,9 @@ world.beforeEvents.chatSend.subscribe((event) => {
     system.run(() => {
         let formattedMessage = originalMessage;
         for (const target of world.getAllPlayers()) {
+            if (!arePingsEnabled(target)) {
+                continue;
+            }
             const rules = getPingRules(target);
             const matchedTerms = getMatchedPingTerms(originalMessage, target, rules);
             if (matchedTerms.length === 0) {
@@ -865,15 +885,21 @@ function processPings(sender, message) {
         if (target.id === sender.id) {
             continue;
         }
+        if (!arePingsEnabled(target)) {
+            continue;
+        }
         const rules = getPingRules(target);
         if (!shouldPingPlayer(message, target, rules)) {
             continue;
         }
-        target.playSound(PING_SOUND, {
-            volume: 1,
-            pitch: 1,
-        });
+        target.runCommand("playsound random.orb @s ~ ~ ~ 1 1");
     }
+}
+function arePingsEnabled(player) {
+    const stored = player.getDynamicProperty(PING_ENABLED_PROPERTY);
+    return typeof stored === "boolean"
+        ? stored
+        : true;
 }
 function shouldPingPlayer(message, target, rules) {
     const containsBlacklistedTerm = rules.blacklist.some((term) => containsPingTerm(message, term));

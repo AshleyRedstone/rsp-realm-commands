@@ -62,3 +62,6 @@ plots.ping.list=Your %1: %2
 plots.ping.cleared=Cleared your %1.
 plots.ping.whitelist=whitelist
 plots.ping.blacklist=blacklist
+plots.ping.action_required=Choose add, remove, list, or clear.
+plots.ping.enabled=§aPings enabled.
+plots.ping.disabled=§cPings disabled.
