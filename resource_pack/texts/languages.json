@@ -1,5 +1,22 @@
 [
     "en_US",
     "is_IS",
-    "zh_CN"
+    "zh_CN",
+    "ar",
+    "cs_CZ",
+    "de_DE",
+    "fr_CA",
+    "fr_FR",
+    "hu_HU",
+    "it_IT",
+    "nb_NO",
+    "nn_NO",
+    "pl_PL",
+    "ro_RO",
+    "ru_RU",
+    "sk_SK",
+    "sl_SI",
+    "sv_SE",
+    "tok",
+    "tr_TR"
 ]
