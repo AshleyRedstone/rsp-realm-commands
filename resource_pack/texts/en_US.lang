@@ -1,7 +1,7 @@
 plots.error.player_only=This command can only be used by a player.
 plots.error.no_permission=You do not have permission to manage plots.
 plots.visit.usage=Usage: /plot visit <destination>
-plots.visit.unknown=Unknown destination "%1" aiwdjoiawjdoijoijwdaowdjiawdoij.
+plots.visit.unknown=Unknown destination "%1".
 plots.visit.success=§aTeleported to §f%1§a.
 plots.list.empty=There are no plot destinations.
 plots.list.header=Destinations: %1
