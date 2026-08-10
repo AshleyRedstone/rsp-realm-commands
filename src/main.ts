@@ -207,6 +207,24 @@ registry.registerEnum(
     ],
 );
 
+registry.registerEnum(
+    "plots:gamemode",
+    [
+        "survival",
+        "creative",
+        "adventure",
+        "spectator",
+        "s",
+        "c",
+        "a",
+        "sp",
+        "0",
+        "1",
+        "2",
+        "3",
+    ],
+);
+
 const lecternCommand: CustomCommand = {
     name: "plots:lectern",
     description: "Load the lectern structure",
@@ -430,6 +448,25 @@ registry.registerCommand(
         shortPlotCommand,
         handleShortPlotCommand,
     );
+    
+    const gamemodeCommand: CustomCommand = {
+    name: "plots:gm",
+    description: "Shorthand for /gamemode",
+    permissionLevel: CommandPermissionLevel.GameDirectors,
+    cheatsRequired: true,
+
+    mandatoryParameters: [
+        {
+            name: "plots:gamemode",
+            type: CustomCommandParamType.Enum,
+        },
+    ],
+};
+
+registry.registerCommand(
+    gamemodeCommand,
+    handleGamemodeCommand,
+);
     
 });
 
@@ -729,6 +766,51 @@ function handlePingCommand(
                 player,
                 "plots.ping.unknown_action",
                 [actionArgument],
+            );
+    }
+}
+
+function handlePlotCommand(
+    origin: CustomCommandOrigin,
+    mode: string,
+    argument?: string,
+    destinationName?: string,
+    x?: number,
+    y?: number,
+    z?: number,
+): CustomCommandResult {
+    switch (mode.toLowerCase()) {
+        case "visit":
+            return visitDestination(
+                origin,
+                argument,
+            );
+
+        case "home":
+            return handleHomeCommand(
+                origin,
+                argument,
+                destinationName,
+            );
+
+        case "list":
+            return listDestinations(origin);
+
+        case "admin":
+            return handleAdminCommand(
+                origin,
+                argument,
+                destinationName,
+                x,
+                y,
+                z,
+            );
+
+        default:
+            return translatedOriginFailure(
+                origin,
+                "plots.command.unknown",
+                [mode],
             );
     }
 }
@@ -1733,4 +1815,52 @@ function escapePingRegex(text: string): string {
         /[.*+?^${}()|[\]\\]/g,
         "\\$&",
     );
+}
+
+function handleGamemodeCommand(
+    origin: CustomCommandOrigin,
+    mode: string,
+): CustomCommandResult {
+    const player = getCommandPlayer(origin);
+
+    if (player === undefined) {
+        return failure(
+            "This command can only be used by a player.",
+        );
+    }
+
+    const modes: Record<string, string> = {
+        survival: "survival",
+        s: "survival",
+        "0": "survival",
+
+        creative: "creative",
+        c: "creative",
+        "1": "creative",
+
+        adventure: "adventure",
+        a: "adventure",
+        "2": "adventure",
+
+        spectator: "spectator",
+        sp: "spectator",
+        "3": "spectator",
+    };
+
+    const gamemode =
+        modes[mode.toLowerCase()];
+
+    if (gamemode === undefined) {
+        return failure(
+            `Unknown gamemode "${mode}".`,
+        );
+    }
+
+    system.run(() => {
+        player.runCommand(
+            `gamemode ${gamemode} @s`,
+        );
+    });
+
+    return success();
 }
