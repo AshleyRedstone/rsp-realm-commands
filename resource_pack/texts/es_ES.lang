@@ -1,1 +1,18 @@
-
+plots.error.player_only=Este comando solo puede ser usado por un jugador.
+plots.error.no_permission=No tienes permisos para administrar parcelas.
+plots.visit.usage=Uso: /plot visit <destino>
+plots.visit.unknown=Destino desconocido "%1".
+plots.visit.success=§a Teletransportado a §f%1§a.
+plots.list.empty=No hay parcelas de destino.
+plots.list.header=Destinos: %1
+plots.home.not_set=No has seleccionado un hogar. Usa /plot home set <destino>.
+plots.home.usage=Uso: /plot home set <destino>
+plots.home.unknown_action=Acción de casa desconocida "%1". Uso: /plot home set <destino>
+plots.home.set=Tu hogar ha sido establecido en "%1".
+plots.home.deleted=Tu hogar de destino "%1" ya no existe. Elige otro con /plot home set <destino>.
+plots.home.teleported=§a Teletransportado a §f%1§a.
+plots.admin.usage=Uso: /plot admin <set|remove|debug>
+plots.admin.set_usage=Uso: /plot admin set <destino> [x] [y] [z]
+plots.admin.remove_usage=Uso: /plot admin remove <destino>
+plots.admin.added=Añadido "%" en %2, %3, %4.
+plots.admin.updated=Actualizado "%1" en %2, %3, %4.
