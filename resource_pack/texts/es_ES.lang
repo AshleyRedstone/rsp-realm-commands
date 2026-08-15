@@ -1,5 +1,5 @@
 plots.error.player_only=Este comando solo puede ser usado por un jugador.
-plots.error.no_permission=No tienes permisos para administrar parcelas.
+plots.error.no_permission=No tienes permiso para administrar parcelas.
 plots.visit.usage=Uso: /plot visit <destino>
 plots.visit.unknown=Destino desconocido "%1".
 plots.visit.success=§a Teletransportado a §f%1§a.
@@ -27,7 +27,7 @@ plots.lectern.failure=§cNo se pudo cargar la estructura del atril: %1
 plots.strider.success=§aCargada la estructura de Lavagante.
 plots.strider.failure=§cNo se pudo cargar la estructura de Lavagante: %1
 plots.rod.success=§aPuso una vara empoderada relampagueante en la dirección %1.
-plots.rod.failure=§cNo pudo poner la vara relampagueante: %1.
+plots.rod.failure=§cNo pudo poner la vara relampagueante: %1
 plots.rod.unknown_direction=§cDirección de vara desconocida "%1".
 plots.debug.header=§6Propiedad dinámica del mundo debug
 plots.debug.property_count=§7Propiedades: §f%1
