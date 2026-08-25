@@ -1,6 +1,6 @@
-<?xml version="1.0"?>
+<?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE martif PUBLIC "ISO 12200:1999A//DTD MARTIF core (DXFcdV04)//EN" "TBXcdv04.dtd">
-<martif type="TBX">
+<martif type="TBX" xml:lang="en">
     <martifHeader>
         <fileDesc>
             <sourceDesc>
@@ -10,6 +10,10 @@
     </martifHeader>
     <text>
         <body>
+            <termEntry id="refers to a noise that is played when a player's name is said in chat, could be translated as 'notification' if no equivalent word exists">
+                <langSet xml:lang="en"><tig><term>Ping</term></tig></langSet>
+                <langSet xml:lang="da"><tig><term></term></tig></langSet>
+            </termEntry>
         </body>
     </text>
 </martif>
