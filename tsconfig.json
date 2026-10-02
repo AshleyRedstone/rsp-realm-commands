@@ -7,7 +7,7 @@
         "removeComments": true,
         "skipLibCheck": true,
         "rootDir": "./src",
-        "outDir": "./behaviour_pack/scripts"
+        "outDir": "./plot pack bp/scripts"
     },
     "include": [
         "src/**/*.ts"
