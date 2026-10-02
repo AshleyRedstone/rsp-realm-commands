@@ -1,13 +1,14 @@
 import { CommandPermissionLevel, CustomCommandParamType, CustomCommandStatus, Player, system, world, } from "@minecraft/server";
+import { ActionFormData } from "@minecraft/server-ui";
 const playerSnapshots = new Map();
 const TELEPORT_DETECTION_DISTANCE = 8;
 const TELEPORT_DETECTION_DISTANCE_SQUARED = TELEPORT_DETECTION_DISTANCE * TELEPORT_DETECTION_DISTANCE;
-const STORAGE_KEY = "plots:destinations";
-const HOME_PROPERTY = "plots:home";
-const BACK_PROPERTY = "plots:back";
-const PING_WHITELIST_PROPERTY = "plots:ping_whitelist";
-const PING_BLACKLIST_PROPERTY = "plots:ping_blacklist";
-const PING_ENABLED_PROPERTY = "plots:ping_enabled";
+const STORAGE_KEY = "rsp:destinations";
+const HOME_PROPERTY = "rsp:home";
+const BACK_PROPERTY = "rsp:back";
+const PING_WHITELIST_PROPERTY = "rsp:ping_whitelist";
+const PING_BLACKLIST_PROPERTY = "rsp:ping_blacklist";
+const PING_ENABLED_PROPERTY = "rsp:ping_enabled";
 const defaultDestinations = {
     spawn: {
         x: 0,
@@ -78,10 +79,10 @@ function sendTranslationNow(player, key, parameters = []) {
 }
 system.beforeEvents.startup.subscribe((event) => {
     const registry = event.customCommandRegistry;
-    registry.registerEnum("plots:plot_mode", ["visit", "home", "list", "admin"]);
-    registry.registerEnum("plots:short_mode", ["v", "h", "l", "a"]);
-    registry.registerEnum("plots:admin_action", ["set", "remove", "debug"]);
-    registry.registerEnum("plots:rod_direction", [
+    registry.registerEnum("rsp:plot_mode", ["visit", "home", "list", "admin"]);
+    registry.registerEnum("rsp:short_mode", ["v", "h", "l", "a"]);
+    registry.registerEnum("rsp:admin_action", ["set", "remove", "debug"]);
+    registry.registerEnum("rsp:rod_direction", [
         "down",
         "up",
         "north",
@@ -89,18 +90,18 @@ system.beforeEvents.startup.subscribe((event) => {
         "west",
         "east",
     ]);
-    registry.registerEnum("plots:ping_mode", [
+    registry.registerEnum("rsp:ping_mode", [
         "whitelist",
         "blacklist",
         "toggle",
     ]);
-    registry.registerEnum("plots:ping_action", [
+    registry.registerEnum("rsp:ping_action", [
         "add",
         "remove",
         "list",
         "clear",
     ]);
-    registry.registerEnum("plots:gamemode", [
+    registry.registerEnum("rsp:gamemode", [
         "survival",
         "creative",
         "adventure",
@@ -114,68 +115,22 @@ system.beforeEvents.startup.subscribe((event) => {
         "2",
         "3",
     ]);
-    const lecternCommand = {
-        name: "plots:lectern",
-        description: "Load the lectern structure",
-        permissionLevel: CommandPermissionLevel.Any,
-        cheatsRequired: false,
-    };
-    const shortLecternCommand = {
-        name: "plots:l",
-        description: "Short alias for /lectern",
-        permissionLevel: CommandPermissionLevel.Any,
-        cheatsRequired: false,
-    };
-    const striderCommand = {
-        name: "plots:strider",
-        description: "Load the strider structure",
-        permissionLevel: CommandPermissionLevel.Any,
-        cheatsRequired: false,
-    };
-    const shortStriderCommand = {
-        name: "plots:s",
-        description: "Short alias for /strider",
-        permissionLevel: CommandPermissionLevel.Any,
-        cheatsRequired: false,
-    };
-    const rodCommand = {
-        name: "plots:rod",
-        description: "Place a powered lightning rod",
-        permissionLevel: CommandPermissionLevel.Any,
-        cheatsRequired: false,
-        mandatoryParameters: [
-            {
-                name: "plots:rod_direction",
-                type: CustomCommandParamType.Enum,
-            },
-        ],
-    };
-    const shortRodCommand = {
-        name: "plots:r",
-        description: "Short alias for /rod",
-        permissionLevel: CommandPermissionLevel.Any,
-        cheatsRequired: false,
-        mandatoryParameters: [
-            {
-                name: "plots:rod_direction",
-                type: CustomCommandParamType.Enum,
-            },
-        ],
-    };
-    registry.registerCommand(lecternCommand, handleLecternCommand);
-    registry.registerCommand(shortLecternCommand, handleLecternCommand);
-    registry.registerCommand(striderCommand, handleStriderCommand);
-    registry.registerCommand(shortStriderCommand, handleStriderCommand);
-    registry.registerCommand(rodCommand, handleRodCommand);
-    registry.registerCommand(shortRodCommand, handleRodCommand);
+    const placeCommand = {
+    name: "rsp:place",
+    description: "Place plot objects",
+    permissionLevel: CommandPermissionLevel.Any,
+    cheatsRequired: false,
+};
+
+registry.registerCommand(placeCommand, handlePlaceCommand);
     const backCommand = {
-        name: "plots:back",
+        name: "rsp:back",
         description: "Return to your previous location",
         permissionLevel: CommandPermissionLevel.Any,
         cheatsRequired: false,
     };
     const shortBackCommand = {
-        name: "plots:b",
+        name: "rsp:b",
         description: "Short alias for /back",
         permissionLevel: CommandPermissionLevel.Any,
         cheatsRequired: false,
@@ -183,19 +138,19 @@ system.beforeEvents.startup.subscribe((event) => {
     registry.registerCommand(backCommand, handleBackCommand);
     registry.registerCommand(shortBackCommand, handleBackCommand);
     const pingCommand = {
-        name: "plots:ping",
+        name: "rsp:ping",
         description: "Manage your ping settings",
         permissionLevel: CommandPermissionLevel.Any,
         cheatsRequired: false,
         mandatoryParameters: [
             {
-                name: "plots:ping_mode",
+                name: "rsp:ping_mode",
                 type: CustomCommandParamType.Enum,
             },
         ],
         optionalParameters: [
             {
-                name: "plots:ping_action",
+                name: "rsp:ping_action",
                 type: CustomCommandParamType.Enum,
             },
             {
@@ -206,13 +161,13 @@ system.beforeEvents.startup.subscribe((event) => {
     };
     registry.registerCommand(pingCommand, handlePingCommand);
     const plotCommand = {
-        name: "plots:plot",
+        name: "rsp:plot",
         description: "Visit or manage plot destinations",
         permissionLevel: CommandPermissionLevel.Any,
         cheatsRequired: false,
         mandatoryParameters: [
             {
-                name: "plots:plot_mode",
+                name: "rsp:plot_mode",
                 type: CustomCommandParamType.Enum,
             },
         ],
@@ -240,13 +195,13 @@ system.beforeEvents.startup.subscribe((event) => {
         ],
     };
     const shortPlotCommand = {
-        name: "plots:p",
+        name: "rsp:p",
         description: "Short alias for /plot",
         permissionLevel: CommandPermissionLevel.Any,
         cheatsRequired: false,
         mandatoryParameters: [
             {
-                name: "plots:short_mode",
+                name: "rsp:short_mode",
                 type: CustomCommandParamType.Enum,
             },
         ],
@@ -276,13 +231,13 @@ system.beforeEvents.startup.subscribe((event) => {
     registry.registerCommand(plotCommand, handlePlotCommand);
     registry.registerCommand(shortPlotCommand, handleShortPlotCommand);
     const gamemodeCommand = {
-        name: "plots:gm",
+        name: "rsp:gm",
         description: "Shorthand for /gamemode",
         permissionLevel: CommandPermissionLevel.GameDirectors,
         cheatsRequired: true,
         mandatoryParameters: [
             {
-                name: "plots:gamemode",
+                name: "rsp:gamemode",
                 type: CustomCommandParamType.Enum,
             },
         ],
@@ -363,15 +318,15 @@ function handlePingCommand(origin, modeArgument, actionArgument, phraseArgument)
             player.setDynamicProperty(PING_ENABLED_PROPERTY, newValue);
         });
         return translatedSuccess(player, newValue
-            ? "plots.ping.enabled"
-            : "plots.ping.disabled");
+            ? "rsp.ping.enabled"
+            : "rsp.ping.disabled");
     }
     if (mode !== "whitelist" &&
         mode !== "blacklist") {
-        return translatedFailure(player, "plots.ping.unknown_list", [modeArgument]);
+        return translatedFailure(player, "rsp.ping.unknown_list", [modeArgument]);
     }
     if (actionArgument === undefined) {
-        return translatedFailure(player, "plots.ping.action_required");
+        return translatedFailure(player, "rsp.ping.action_required");
     }
     const action = actionArgument.toLowerCase();
     const propertyId = mode === "whitelist"
@@ -381,14 +336,14 @@ function handlePingCommand(origin, modeArgument, actionArgument, phraseArgument)
     switch (action) {
         case "add": {
             if (phraseArgument === undefined) {
-                return translatedFailure(player, "plots.ping.phrase_required");
+                return translatedFailure(player, "rsp.ping.phrase_required");
             }
             const phrase = normalisePingPhrase(phraseArgument);
             if (phrase.length === 0) {
-                return translatedFailure(player, "plots.ping.phrase_required");
+                return translatedFailure(player, "rsp.ping.phrase_required");
             }
             if (values.includes(phrase)) {
-                return translatedFailure(player, "plots.ping.already_exists", [phrase, mode]);
+                return translatedFailure(player, "rsp.ping.already_exists", [phrase, mode]);
             }
             system.run(() => {
                 savePingList(player, propertyId, [
@@ -396,26 +351,26 @@ function handlePingCommand(origin, modeArgument, actionArgument, phraseArgument)
                     phrase,
                 ]);
             });
-            return translatedSuccess(player, "plots.ping.added", [phrase, mode]);
+            return translatedSuccess(player, "rsp.ping.added", [phrase, mode]);
         }
         case "remove": {
             if (phraseArgument === undefined) {
-                return translatedFailure(player, "plots.ping.phrase_required");
+                return translatedFailure(player, "rsp.ping.phrase_required");
             }
             const phrase = normalisePingPhrase(phraseArgument);
             if (!values.includes(phrase)) {
-                return translatedFailure(player, "plots.ping.not_found", [phrase, mode]);
+                return translatedFailure(player, "rsp.ping.not_found", [phrase, mode]);
             }
             system.run(() => {
                 savePingList(player, propertyId, values.filter((value) => value !== phrase));
             });
-            return translatedSuccess(player, "plots.ping.removed", [phrase, mode]);
+            return translatedSuccess(player, "rsp.ping.removed", [phrase, mode]);
         }
         case "list": {
             if (values.length === 0) {
-                return translatedSuccess(player, "plots.ping.list_empty", [mode]);
+                return translatedSuccess(player, "rsp.ping.list_empty", [mode]);
             }
-            return translatedSuccess(player, "plots.ping.list", [
+            return translatedSuccess(player, "rsp.ping.list", [
                 mode,
                 values.join(", "),
             ]);
@@ -424,10 +379,10 @@ function handlePingCommand(origin, modeArgument, actionArgument, phraseArgument)
             system.run(() => {
                 player.setDynamicProperty(propertyId, undefined);
             });
-            return translatedSuccess(player, "plots.ping.cleared", [mode]);
+            return translatedSuccess(player, "rsp.ping.cleared", [mode]);
         }
         default:
-            return translatedFailure(player, "plots.ping.unknown_action", [actionArgument]);
+            return translatedFailure(player, "rsp.ping.unknown_action", [actionArgument]);
     }
 }
 function handlePlotCommand(origin, mode, argument, destinationName, x, y, z) {
@@ -441,7 +396,7 @@ function handlePlotCommand(origin, mode, argument, destinationName, x, y, z) {
         case "admin":
             return handleAdminCommand(origin, argument, destinationName, x, y, z);
         default:
-            return translatedOriginFailure(origin, "plots.command.unknown", [mode]);
+            return translatedOriginFailure(origin, "rsp.command.unknown", [mode]);
     }
 }
 function handleShortPlotCommand(origin, mode, argument, destinationName, x, y, z) {
@@ -455,7 +410,7 @@ function handleShortPlotCommand(origin, mode, argument, destinationName, x, y, z
         case "a":
             return handleAdminCommand(origin, argument, destinationName, x, y, z);
         default:
-            return translatedOriginFailure(origin, "plots.command.unknown_alias", [mode]);
+            return translatedOriginFailure(origin, "rsp.command.unknown_alias", [mode]);
     }
 }
 function visitDestination(origin, destinationName) {
@@ -464,13 +419,13 @@ function visitDestination(origin, destinationName) {
         return failure("This command can only be used by a player.");
     }
     if (destinationName === undefined) {
-        return translatedFailure(player, "plots.visit.usage");
+        return translatedFailure(player, "rsp.visit.usage");
     }
     const key = normaliseName(destinationName);
     const destinations = loadDestinations();
     const destination = destinations[key];
     if (!destination) {
-        return translatedFailure(player, "plots.visit.unknown", [key]);
+        return translatedFailure(player, "rsp.visit.unknown", [key]);
     }
     system.run(() => {
         saveCurrentLocationAsBack(player);
@@ -485,7 +440,7 @@ function visitDestination(origin, destinationName) {
             },
         });
         player.sendMessage({
-            translate: "plots.visit.success",
+            translate: "rsp.visit.success",
             with: [key],
         });
     });
@@ -501,7 +456,7 @@ function listDestinations(origin) {
     const destinations = loadDestinations();
     const names = Object.keys(destinations).sort();
     if (names.length === 0) {
-        return translatedSuccess(player, "plots.list.empty");
+        return translatedSuccess(player, "rsp.list.empty");
     }
     const list = names
         .map((name) => {
@@ -514,7 +469,7 @@ function listDestinations(origin) {
             `${destination.ry ?? 0}]`);
     })
         .join(", ");
-    return translatedSuccess(player, "plots.list.header", [list]);
+    return translatedSuccess(player, "rsp.list.header", [list]);
 }
 function handleHomeCommand(origin, action, destinationName) {
     const player = origin.sourceEntity;
@@ -526,22 +481,22 @@ function handleHomeCommand(origin, action, destinationName) {
     }
     if (action.toLowerCase() === "set") {
         if (destinationName === undefined) {
-            return translatedFailure(player, "plots.home.usage");
+            return translatedFailure(player, "rsp.home.usage");
         }
         return setHome(player, destinationName);
     }
-    return translatedFailure(player, "plots.home.unknown_action", [action]);
+    return translatedFailure(player, "rsp.home.unknown_action", [action]);
 }
 function setHome(player, destinationName) {
     const key = normaliseName(destinationName);
     const destinations = loadDestinations();
     if (!destinations[key]) {
-        return translatedFailure(player, "plots.visit.unknown", [key]);
+        return translatedFailure(player, "rsp.visit.unknown", [key]);
     }
     system.run(() => {
         player.setDynamicProperty(HOME_PROPERTY, key);
         player.sendMessage({
-            translate: "plots.home.set",
+            translate: "rsp.home.set",
             with: [key],
         });
     });
@@ -552,13 +507,13 @@ function setHome(player, destinationName) {
 function teleportHome(player) {
     const storedHome = player.getDynamicProperty(HOME_PROPERTY);
     if (typeof storedHome !== "string") {
-        return translatedFailure(player, "plots.home.not_set");
+        return translatedFailure(player, "rsp.home.not_set");
     }
     const key = normaliseName(storedHome);
     const destinations = loadDestinations();
     const destination = destinations[key];
     if (!destination) {
-        return translatedFailure(player, "plots.home.deleted", [key]);
+        return translatedFailure(player, "rsp.home.deleted", [key]);
     }
     system.run(() => {
         saveCurrentLocationAsBack(player);
@@ -573,7 +528,7 @@ function teleportHome(player) {
             },
         });
         player.sendMessage({
-            translate: "plots.home.teleported",
+            translate: "rsp.home.teleported",
             with: [key],
         });
     });
@@ -611,20 +566,20 @@ function dumpDynamicPropertyUsage(player) {
         .sort();
     const totalBytes = world.getDynamicPropertyTotalByteCount();
     system.run(() => {
-        sendTranslationNow(player, "plots.debug.header");
-        sendTranslationNow(player, "plots.debug.property_count", [String(propertyIds.length)]);
-        sendTranslationNow(player, "plots.debug.total_storage", [
+        sendTranslationNow(player, "rsp.debug.header");
+        sendTranslationNow(player, "rsp.debug.property_count", [String(propertyIds.length)]);
+        sendTranslationNow(player, "rsp.debug.total_storage", [
             formatBytes(totalBytes),
             String(totalBytes),
         ]);
         if (propertyIds.length === 0) {
-            sendTranslationNow(player, "plots.debug.empty");
+            sendTranslationNow(player, "rsp.debug.empty");
         }
         else {
-            sendTranslationNow(player, "plots.debug.properties_header");
+            sendTranslationNow(player, "rsp.debug.properties_header");
             for (const id of propertyIds) {
                 const value = world.getDynamicProperty(id);
-                sendTranslationNow(player, "plots.debug.property", [
+                sendTranslationNow(player, "rsp.debug.property", [
                     id,
                     formatDynamicPropertyValue(value),
                 ]);
@@ -634,19 +589,19 @@ function dumpDynamicPropertyUsage(player) {
             .getDynamicPropertyIds()
             .sort();
         const playerBytes = player.getDynamicPropertyTotalByteCount();
-        sendTranslationNow(player, "plots.debug.player_header");
-        sendTranslationNow(player, "plots.debug.player_property_count", [String(playerPropertyIds.length)]);
-        sendTranslationNow(player, "plots.debug.player_total_storage", [
+        sendTranslationNow(player, "rsp.debug.player_header");
+        sendTranslationNow(player, "rsp.debug.player_property_count", [String(playerPropertyIds.length)]);
+        sendTranslationNow(player, "rsp.debug.player_total_storage", [
             formatBytes(playerBytes),
             String(playerBytes),
         ]);
         if (playerPropertyIds.length === 0) {
-            sendTranslationNow(player, "plots.debug.player_empty");
+            sendTranslationNow(player, "rsp.debug.player_empty");
         }
         else {
             for (const id of playerPropertyIds) {
                 const value = player.getDynamicProperty(id);
-                sendTranslationNow(player, "plots.debug.player_property", [
+                sendTranslationNow(player, "rsp.debug.player_property", [
                     id,
                     formatDynamicPropertyValue(value),
                 ]);
@@ -662,14 +617,14 @@ function handleBackCommand(origin) {
     }
     const storedBack = player.getDynamicProperty(BACK_PROPERTY);
     if (typeof storedBack !== "string") {
-        return translatedFailure(player, "plots.back.none");
+        return translatedFailure(player, "rsp.back.none");
     }
     let back;
     try {
         back = JSON.parse(storedBack);
     }
     catch {
-        return translatedFailure(player, "plots.back.invalid");
+        return translatedFailure(player, "rsp.back.invalid");
     }
     system.run(() => {
         try {
@@ -684,51 +639,205 @@ function handleBackCommand(origin) {
                     y: back.ry,
                 },
             });
-            sendTranslationNow(player, "plots.back.success");
+            sendTranslationNow(player, "rsp.back.success");
         }
         catch (error) {
-            sendTranslationNow(player, "plots.back.failure", [String(error)]);
+            sendTranslationNow(player, "rsp.back.failure", [String(error)]);
         }
     });
     return success();
 }
-function handleLecternCommand(origin) {
+// ============================================================
+// /place
+// ============================================================
+
+function handlePlaceCommand(origin) {
     const player = getCommandPlayer(origin);
+
     if (player === undefined) {
         return failure("This command can only be used by a player.");
     }
+
     system.run(() => {
-        try {
-            player.runCommand("structure load lecturn ~ ~-1 ~");
-            sendTranslationNow(player, "plots.lectern.success");
-        }
-        catch (error) {
-            sendTranslationNow(player, "plots.lectern.failure", [String(error)]);
-        }
+        showPlaceMenu(player);
     });
+
     return success();
 }
-function handleStriderCommand(origin) {
-    const player = getCommandPlayer(origin);
-    if (player === undefined) {
-        return failure("This command can only be used by a player.");
-    }
-    system.run(() => {
-        try {
-            player.runCommand("structure load strider ~ ~-1 ~");
-            sendTranslationNow(player, "plots.strider.success");
+
+
+// ============================================================
+// Place menu
+// ============================================================
+
+function showPlaceMenu(player) {
+    const form = new ActionFormData()
+        .title("Place")
+        .body("Select what you want to place.")
+        .button("Lectern")
+        .button("Strider")
+        .button("Powered Lightning Rod");
+
+    form.show(player).then((response) => {
+        if (
+            response.canceled ||
+            response.selection === undefined
+        ) {
+            return;
         }
-        catch (error) {
-            sendTranslationNow(player, "plots.strider.failure", [String(error)]);
-        }
+
+        system.run(() => {
+            switch (response.selection) {
+                case 0:
+                    placeLectern(player);
+                    break;
+
+                case 1:
+                    placeStrider(player);
+                    break;
+
+                case 2:
+                    showRodDirectionMenu(player);
+                    break;
+            }
+        });
+    }).catch((error) => {
+        console.warn(
+            `[Place Menu] Failed to show form: ${error}`
+        );
     });
-    return success();
 }
-function handleRodCommand(origin, direction) {
-    const player = getCommandPlayer(origin);
-    if (player === undefined) {
-        return failure("This command can only be used by a player.");
+
+
+// ============================================================
+// Lectern
+// ============================================================
+
+function placeLectern(player) {
+    try {
+        player.runCommand(
+            "structure load lecturn ~ ~-1 ~"
+        );
+
+        sendTranslationNow(
+            player,
+            "plots.lectern.success"
+        );
     }
+    catch (error) {
+        sendTranslationNow(
+            player,
+            "plots.lectern.failure",
+            [String(error)]
+        );
+    }
+}
+
+function placeStrider(player) {
+    try {
+        player.runCommand(
+            "structure load strider ~ ~-1 ~"
+        );
+
+        sendTranslationNow(
+            player,
+            "plots.strider.success"
+        );
+    }
+    catch (error) {
+        sendTranslationNow(
+            player,
+            "plots.strider.failure",
+            [String(error)]
+        );
+    }
+}
+
+function placeRodFromPlayerDirection(player) {
+    const yaw = player.getRotation().y;
+
+    let direction;
+
+    if (yaw >= -45 && yaw < 45) {
+        direction = "south";
+    }
+    else if (yaw >= 45 && yaw < 135) {
+        direction = "west";
+    }
+    else if (yaw >= -135 && yaw < -45) {
+        direction = "east";
+    }
+    else {
+        direction = "north";
+    }
+
+    placeRod(player, direction);
+}
+
+function showRodDirectionMenu(player) {
+    const form = new ActionFormData()
+        .title("Lightning Rod")
+        .body("Select the direction the rod should face.")
+        .button("Player Direction")
+        .button("Up")
+        .button("Down")
+        .button("North")
+        .button("South")
+        .button("West")
+        .button("East")
+        .button("Back");
+
+    form.show(player).then((response) => {
+        if (
+            response.canceled ||
+            response.selection === undefined
+        ) {
+            return;
+        }
+
+        system.run(() => {
+            switch (response.selection) {
+                case 0:
+                    placeRodFromPlayerDirection(player);
+                    break;
+
+                case 1:
+                    placeRod(player, "up");
+                    break;
+
+                case 2:
+                    placeRod(player, "down");
+                    break;
+
+                case 3:
+                    placeRod(player, "north");
+                    break;
+
+                case 4:
+                    placeRod(player, "south");
+                    break;
+
+                case 5:
+                    placeRod(player, "west");
+                    break;
+
+                case 6:
+                    placeRod(player, "east");
+                    break;
+
+                case 7:
+                    showPlaceMenu(player);
+                    break;
+            }
+        });
+    }).catch((error) => {
+        console.warn(
+            `[Place Menu] Failed to show rod direction form: ${error}`
+        );
+    });
+}
+
+function placeRod(player, direction) {
     const directionNumbers = {
         down: 0,
         up: 1,
@@ -737,28 +846,27 @@ function handleRodCommand(origin, direction) {
         west: 4,
         east: 5,
     };
-    const normalisedDirection = direction.toLowerCase();
-    const directionNumber = directionNumbers[normalisedDirection];
-    if (directionNumber === undefined) {
-        return translatedFailure(player, "plots.rod.unknown_direction", [direction]);
+
+    const directionNumber =
+        directionNumbers[direction];
+
+    try {
+        player.runCommand(
+            `setblock ~ ~-1 ~ minecraft:lightning_rod` +
+            `["powered_bit"=true,"facing_direction"=${directionNumber}]`
+        );
+
+        player.sendMessage({
+            translate: "plots.rod.success",
+            with: [direction],
+        });
     }
-    system.run(() => {
-        try {
-            player.runCommand(`setblock ~ ~-1 ~ minecraft:lightning_rod` +
-                `["powered_bit"=true,"facing_direction"=${directionNumber}]`);
-            player.sendMessage({
-                translate: "plots.rod.success",
-                with: [normalisedDirection],
-            });
-        }
-        catch (error) {
-            player.sendMessage({
-                translate: "plots.rod.failure",
-                with: [String(error)],
-            });
-        }
-    });
-    return success();
+    catch (error) {
+        player.sendMessage({
+            translate: "plots.rod.failure",
+            with: [String(error)],
+        });
+    }
 }
 function handleAdminCommand(origin, action, destinationName, x, y, z) {
     const player = origin.sourceEntity;
@@ -766,16 +874,16 @@ function handleAdminCommand(origin, action, destinationName, x, y, z) {
         return failure("This command can only be used by a player.");
     }
     if (!player.hasTag("plot_admin")) {
-        return translatedFailure(player, "plots.error.no_permission");
+        return translatedFailure(player, "rsp.error.no_permission");
     }
     if (action === undefined) {
-        return translatedFailure(player, "plots.admin.usage");
+        return translatedFailure(player, "rsp.admin.usage");
     }
     const destinations = loadDestinations();
     switch (action.toLowerCase()) {
         case "set": {
             if (destinationName === undefined) {
-                return translatedFailure(player, "plots.admin.set_usage");
+                return translatedFailure(player, "rsp.admin.set_usage");
             }
             const location = player.location;
             const rotation = player.getRotation();
@@ -797,8 +905,8 @@ function handleAdminCommand(origin, action, destinationName, x, y, z) {
                 saveDestinations(destinations);
             });
             return translatedSuccess(player, alreadyExists
-                ? "plots.admin.updated"
-                : "plots.admin.added", [
+                ? "rsp.admin.updated"
+                : "rsp.admin.added", [
                 key,
                 String(finalX),
                 String(finalY),
@@ -807,22 +915,22 @@ function handleAdminCommand(origin, action, destinationName, x, y, z) {
         }
         case "remove": {
             if (destinationName === undefined) {
-                return translatedFailure(player, "plots.admin.remove_usage");
+                return translatedFailure(player, "rsp.admin.remove_usage");
             }
             const key = normaliseName(destinationName);
             if (!destinations[key]) {
-                return translatedFailure(player, "plots.admin.missing", [key]);
+                return translatedFailure(player, "rsp.admin.missing", [key]);
             }
             delete destinations[key];
             system.run(() => {
                 saveDestinations(destinations);
             });
-            return translatedSuccess(player, "plots.admin.removed", [key]);
+            return translatedSuccess(player, "rsp.admin.removed", [key]);
         }
         case "debug":
             return dumpDynamicPropertyUsage(player);
         default:
-            return translatedFailure(player, "plots.admin.unknown_action", [action]);
+            return translatedFailure(player, "rsp.admin.unknown_action", [action]);
     }
 }
 const PING_SOUND = "random.orb";
