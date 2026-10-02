@@ -1,0 +1,48 @@
+{
+  "format_version": 2,
+  "header": {
+    "name": "DiscordStructureImporter",
+    "description": "Remote structure uploader for the rsp server",
+    "uuid": "d9ff529f-0ccb-4e22-aaa2-444c3f635f62",
+    "min_engine_version": [ 1, 26, 50 ],
+    "version": [ 1, 0, 0 ]
+  },
+  "modules": [
+    {
+      "description": "Behavior Pack Module",
+      "type": "data",
+      "uuid": "a26ae098-0e30-45bc-9db9-49864268967d",
+      "version": [1, 0, 0]
+    },
+    {
+      "description": "scripts",
+      "type": "script",
+      "language": "javascript",
+      "entry": "scripts/index.js",
+      "uuid": "9270b834-458d-4ff4-85d5-fc407f3186bd",
+      "version": [1, 0, 0]
+    }
+  ],
+  "dependencies": [
+    {
+      "module_name": "@minecraft/server",
+      "version": "beta"
+    },
+    { 
+      "module_name": "@minecraft/server-ui",
+      "version": "beta"
+    },
+    {
+      "module_name": "@minecraft/server-net",
+      "version": "beta"
+    },
+    {
+      "module_name": "@minecraft/server-admin",
+      "version": "beta"
+    },
+    {
+      "module_name": "@minecraft/server-gametest",
+      "version": "beta"
+    }
+  ]
+}
