@@ -1,5 +1,6 @@
 import { CommandPermissionLevel, CustomCommandParamType, CustomCommandStatus, Player, system, world, } from "@minecraft/server";
 import { ActionFormData } from "@minecraft/server-ui";
+import "./wireless_input.js"
 const playerSnapshots = new Map();
 const TELEPORT_DETECTION_DISTANCE = 8;
 const TELEPORT_DETECTION_DISTANCE_SQUARED = TELEPORT_DETECTION_DISTANCE * TELEPORT_DETECTION_DISTANCE;
