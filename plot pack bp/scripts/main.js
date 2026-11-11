@@ -1,5 +1,9 @@
 import "./features/back.js";
 import "./features/ping.js";
+import "./features/debug.js";
+import "./features/plots.js";
+import "./features/place.js";
+import "./features/gamemode.js";
+import "./features/wireless_input.js";
 import "./commands/register.js";
 import "./utils/console_chat.js";
-import "./features/wireless_input.js";
