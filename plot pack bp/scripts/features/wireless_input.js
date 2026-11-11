@@ -39,7 +39,7 @@ function handleInputs(origin) {
     if (!(player instanceof Player)) {
         return {
             status: CustomCommandStatus.Failure,
-            message: "This command must be executed by a player."
+            
         };
     }
 
@@ -54,7 +54,7 @@ function handleInputs(origin) {
     ) {
         return {
             status: CustomCommandStatus.Failure,
-            message: "You must look at a lever or button!"
+            
         };
     }
 

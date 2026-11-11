@@ -1,10 +1,10 @@
 import { system } from "@minecraft/server";
-import { failure, success, getCommandPlayer } from "../utils/commands.js";
+import { failure, success, sendLater, getCommandPlayer } from "../utils/commands.js";
 
 export function handleGamemodeCommand(origin, mode) {
     const player = getCommandPlayer(origin);
     if (player === undefined) {
-        return failure("This command can only be used by a player.");
+        return failure();
     }
     const modes = {
         survival: "survival",
@@ -22,7 +22,8 @@ export function handleGamemodeCommand(origin, mode) {
     };
     const gamemode = modes[mode.toLowerCase()];
     if (gamemode === undefined) {
-        return failure(`Unknown gamemode "${mode}".`);
+        sendLater(player, { translate: "rsp.gamemode.unknown", with: [String(mode)] });
+        return failure();
     }
     system.run(() => {
         player.runCommand(`gamemode ${gamemode} @s`);

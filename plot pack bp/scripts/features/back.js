@@ -1,5 +1,5 @@
 import { system, world } from "@minecraft/server";
-import { failure, success, translatedFailure, sendTranslationNow, getCommandPlayer } from "../utils/commands.js";
+import { reply, failure, success, getCommandPlayer } from "../utils/commands.js";
 
 const BACK_PROPERTY = "rsp:back";
 const TELEPORT_DETECTION_DISTANCE = 8;
@@ -60,18 +60,18 @@ system.runInterval(() => {
 export function handleBackCommand(origin) {
     const player = getCommandPlayer(origin);
     if (player === undefined) {
-        return failure("This command can only be used by a player.");
+        return failure();
     }
     const storedBack = player.getDynamicProperty(BACK_PROPERTY);
     if (typeof storedBack !== "string") {
-        return translatedFailure(player, "rsp.back.none");
+        return reply(player, "rsp.back.none", [], true);
     }
     let back;
     try {
         back = JSON.parse(storedBack);
     }
     catch {
-        return translatedFailure(player, "rsp.back.invalid");
+        return reply(player, "rsp.back.invalid", [], true);
     }
     system.run(() => {
         try {
@@ -86,10 +86,10 @@ export function handleBackCommand(origin) {
                     y: back.ry,
                 },
             });
-            sendTranslationNow(player, "rsp.back.success");
+            player.sendMessage({ translate: "rsp.back.success", with: [] });
         }
         catch (error) {
-            sendTranslationNow(player, "rsp.back.failure", [String(error)]);
+            player.sendMessage({ translate: "rsp.back.failure", with: [String(error)] });
         }
     });
     return success();

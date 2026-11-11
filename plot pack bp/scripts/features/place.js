@@ -1,6 +1,6 @@
 import { system } from "@minecraft/server";
 import { ActionFormData } from "@minecraft/server-ui";
-import { failure, success, sendTranslationNow, getCommandPlayer } from "../utils/commands.js";
+import { failure, success, getCommandPlayer } from "../utils/commands.js";
 
 // ============================================================
 // /place
@@ -10,7 +10,7 @@ export function handlePlaceCommand(origin) {
     const player = getCommandPlayer(origin);
 
     if (player === undefined) {
-        return failure("This command can only be used by a player.");
+        return failure();
     }
 
     system.run(() => {
@@ -27,11 +27,11 @@ export function handlePlaceCommand(origin) {
 
 function showPlaceMenu(player) {
     const form = new ActionFormData()
-        .title("Place")
-        .body("Select what you want to place.")
-        .button("Lectern")
-        .button("Strider")
-        .button("Powered Lightning Rod");
+        .title({ translate: "rsp.place.title" })
+        .body({ translate: "rsp.place.body" })
+        .button({ translate: "rsp.place.lectern" })
+        .button({ translate: "rsp.place.strider" })
+        .button({ translate: "rsp.place.powered_rod" });
 
     form.show(player).then((response) => {
         if (
@@ -74,17 +74,10 @@ function placeLectern(player) {
             "structure load lecturn ~ ~-1 ~"
         );
 
-        sendTranslationNow(
-            player,
-            "rsp.lectern.success"
-        );
+        player.sendMessage({ translate: "rsp.lectern.success", with: [] });
     }
     catch (error) {
-        sendTranslationNow(
-            player,
-            "rsp.lectern.failure",
-            [String(error)]
-        );
+        player.sendMessage({ translate: "rsp.lectern.failure", with: [String(error)] });
     }
 }
 
@@ -94,17 +87,10 @@ function placeStrider(player) {
             "structure load strider ~ ~-1 ~"
         );
 
-        sendTranslationNow(
-            player,
-            "rsp.strider.success"
-        );
+        player.sendMessage({ translate: "rsp.strider.success", with: [] });
     }
     catch (error) {
-        sendTranslationNow(
-            player,
-            "rsp.strider.failure",
-            [String(error)]
-        );
+        player.sendMessage({ translate: "rsp.strider.failure", with: [String(error)] });
     }
 }
 
@@ -131,16 +117,16 @@ function placeRodFromPlayerDirection(player) {
 
 function showRodDirectionMenu(player) {
     const form = new ActionFormData()
-        .title("Lightning Rod")
-        .body("Select the direction the rod should face.")
-        .button("Player Direction")
-        .button("Up")
-        .button("Down")
-        .button("North")
-        .button("South")
-        .button("West")
-        .button("East")
-        .button("Back");
+        .title({ translate: "rsp.place.rod.title" })
+        .body({ translate: "rsp.place.rod.body" })
+        .button({ translate: "rsp.place.rod.player_direction" })
+        .button({ translate: "rsp.direction.up" })
+        .button({ translate: "rsp.direction.down" })
+        .button({ translate: "rsp.direction.north" })
+        .button({ translate: "rsp.direction.south" })
+        .button({ translate: "rsp.direction.west" })
+        .button({ translate: "rsp.direction.east" })
+        .button({ translate: "rsp.place.back" });
 
     form.show(player).then((response) => {
         if (

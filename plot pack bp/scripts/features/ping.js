@@ -1,5 +1,5 @@
 import { system, world } from "@minecraft/server";
-import { failure, translatedSuccess, translatedFailure, getCommandPlayer } from "../utils/commands.js";
+import { reply, failure, getCommandPlayer } from "../utils/commands.js";
 
 const PING_WHITELIST_PROPERTY = "rsp:ping_whitelist";
 const PING_BLACKLIST_PROPERTY = "rsp:ping_blacklist";
@@ -69,7 +69,7 @@ world.beforeEvents.chatSend.subscribe((event) => {
             }
             if (target.id !== sender.id) playPingSound(target);
         }
-        world.sendMessage(`<${sender.name}> ${formattedMessage}`);
+        world.sendMessage({ translate: "rsp.chat.format", with: [sender.name, formattedMessage] });
     });
 });
 function getMatchedPingTerms(message, target, rules) {
@@ -122,7 +122,7 @@ function escapePingRegex(text) {
 export function handlePingCommand(origin, modeArgument, actionArgument, phraseArgument) {
     const player = getCommandPlayer(origin);
     if (player === undefined) {
-        return failure("This command can only be used by a player.");
+        return failure();
     }
     const mode = modeArgument.toLowerCase();
     if (mode === "toggle") {
@@ -134,16 +134,16 @@ export function handlePingCommand(origin, modeArgument, actionArgument, phraseAr
         system.run(() => {
             player.setDynamicProperty(PING_ENABLED_PROPERTY, newValue);
         });
-        return translatedSuccess(player, newValue
+        return reply(player, newValue
             ? "rsp.ping.enabled"
             : "rsp.ping.disabled");
     }
     if (mode !== "whitelist" &&
         mode !== "blacklist") {
-        return translatedFailure(player, "rsp.ping.unknown_list", [modeArgument]);
+        return reply(player, "rsp.ping.unknown_list", [modeArgument], true);
     }
     if (actionArgument === undefined) {
-        return translatedFailure(player, "rsp.ping.action_required");
+        return reply(player, "rsp.ping.action_required", [], true);
     }
     const action = actionArgument.toLowerCase();
     const propertyId = mode === "whitelist"
@@ -153,14 +153,14 @@ export function handlePingCommand(origin, modeArgument, actionArgument, phraseAr
     switch (action) {
         case "add": {
             if (phraseArgument === undefined) {
-                return translatedFailure(player, "rsp.ping.phrase_required");
+                return reply(player, "rsp.ping.phrase_required", [], true);
             }
             const phrase = normalisePingPhrase(phraseArgument);
             if (phrase.length === 0) {
-                return translatedFailure(player, "rsp.ping.phrase_required");
+                return reply(player, "rsp.ping.phrase_required", [], true);
             }
             if (values.includes(phrase)) {
-                return translatedFailure(player, "rsp.ping.already_exists", [phrase, mode]);
+                return reply(player, "rsp.ping.already_exists", [phrase, mode], true);
             }
             system.run(() => {
                 savePingList(player, propertyId, [
@@ -168,26 +168,26 @@ export function handlePingCommand(origin, modeArgument, actionArgument, phraseAr
                     phrase,
                 ]);
             });
-            return translatedSuccess(player, "rsp.ping.added", [phrase, mode]);
+            return reply(player, "rsp.ping.added", [phrase, mode]);
         }
         case "remove": {
             if (phraseArgument === undefined) {
-                return translatedFailure(player, "rsp.ping.phrase_required");
+                return reply(player, "rsp.ping.phrase_required", [], true);
             }
             const phrase = normalisePingPhrase(phraseArgument);
             if (!values.includes(phrase)) {
-                return translatedFailure(player, "rsp.ping.not_found", [phrase, mode]);
+                return reply(player, "rsp.ping.not_found", [phrase, mode], true);
             }
             system.run(() => {
                 savePingList(player, propertyId, values.filter((value) => value !== phrase));
             });
-            return translatedSuccess(player, "rsp.ping.removed", [phrase, mode]);
+            return reply(player, "rsp.ping.removed", [phrase, mode]);
         }
         case "list": {
             if (values.length === 0) {
-                return translatedSuccess(player, "rsp.ping.list_empty", [mode]);
+                return reply(player, "rsp.ping.list_empty", [mode]);
             }
-            return translatedSuccess(player, "rsp.ping.list", [
+            return reply(player, "rsp.ping.list", [
                 mode,
                 values.join(", "),
             ]);
@@ -196,9 +196,9 @@ export function handlePingCommand(origin, modeArgument, actionArgument, phraseAr
             system.run(() => {
                 player.setDynamicProperty(propertyId, undefined);
             });
-            return translatedSuccess(player, "rsp.ping.cleared", [mode]);
+            return reply(player, "rsp.ping.cleared", [mode]);
         }
         default:
-            return translatedFailure(player, "rsp.ping.unknown_action", [actionArgument]);
+            return reply(player, "rsp.ping.unknown_action", [actionArgument], true);
     }
 }

@@ -1,5 +1,5 @@
 import { system, EntityComponentTypes } from "@minecraft/server";
-import { translatedSuccess } from "../utils/commands";
+import { success } from "../utils/commands.js";
 
 export default function handleNameCommand(origin, name) {
     const player = origin.sourceEntity;
@@ -27,8 +27,9 @@ export default function handleNameCommand(origin, name) {
 
         container.setItem(slot, item);
 
-        translatedSuccess(player, "rsp:nameSuccess", [
+        player.sendMessage({ translate: "rsp:nameSuccess", with: [
             item.nameTag
-        ]);
+        ] });
     });
+    return success();
 }

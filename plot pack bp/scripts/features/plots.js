@@ -1,5 +1,5 @@
 import {system, Player, CustomCommandStatus} from "@minecraft/server";
-import { failure, translatedFailure, translatedSuccess, translatedOriginFailure } from "../utils/commands.js";
+import { reply, replyOrigin, failure } from "../utils/commands.js";
 import { normaliseName, loadDestinations, saveDestinations } from "../utils/destinations.js";
 import { saveCurrentLocationAsBack } from "./back.js";
 import { dumpDynamicPropertyUsage } from "./debug.js";
@@ -16,7 +16,7 @@ export function handlePlotCommand(origin, mode, argument, destinationName, x, y,
         case "admin":
             return handleAdminCommand(origin, argument, destinationName, x, y, z);
         default:
-            return translatedOriginFailure(origin, "rsp.command.unknown", [mode]);
+            return replyOrigin(origin, "rsp.command.unknown", [mode]);
     }
 }
 export function handleShortPlotCommand(origin, mode, argument, destinationName, x, y, z) {
@@ -30,22 +30,22 @@ export function handleShortPlotCommand(origin, mode, argument, destinationName, 
         case "a":
             return handleAdminCommand(origin, argument, destinationName, x, y, z);
         default:
-            return translatedOriginFailure(origin, "rsp.command.unknown_alias", [mode]);
+            return replyOrigin(origin, "rsp.command.unknown_alias", [mode]);
     }
 }
 function visitDestination(origin, destinationName) {
     const player = origin.sourceEntity;
     if (!(player instanceof Player)) {
-        return failure("This command can only be used by a player.");
+        return failure();
     }
     if (destinationName === undefined) {
-        return translatedFailure(player, "rsp.visit.usage");
+        return reply(player, "rsp.visit.usage", [], true);
     }
     const key = normaliseName(destinationName);
     const destinations = loadDestinations();
     const destination = destinations[key];
     if (!destination) {
-        return translatedFailure(player, "rsp.visit.unknown", [key]);
+        return reply(player, "rsp.visit.unknown", [key], true);
     }
     system.run(() => {
         saveCurrentLocationAsBack(player);
@@ -71,12 +71,12 @@ function visitDestination(origin, destinationName) {
 function listDestinations(origin) {
     const player = origin.sourceEntity;
     if (!(player instanceof Player)) {
-        return failure("This command can only be used by a player.");
+        return failure();
     }
     const destinations = loadDestinations();
     const names = Object.keys(destinations).sort();
     if (names.length === 0) {
-        return translatedSuccess(player, "rsp.list.empty");
+        return reply(player, "rsp.list.empty");
     }
     const list = names
         .map((name) => {
@@ -89,29 +89,29 @@ function listDestinations(origin) {
             `${destination.ry ?? 0}]`);
     })
         .join(", ");
-    return translatedSuccess(player, "rsp.list.header", [list]);
+    return reply(player, "rsp.list.header", [list]);
 }
 function handleHomeCommand(origin, action, destinationName) {
     const player = origin.sourceEntity;
     if (!(player instanceof Player)) {
-        return failure("This command can only be used by a player.");
+        return failure();
     }
     if (action === undefined) {
         return teleportHome(player);
     }
     if (action.toLowerCase() === "set") {
         if (destinationName === undefined) {
-            return translatedFailure(player, "rsp.home.usage");
+            return reply(player, "rsp.home.usage", [], true);
         }
         return setHome(player, destinationName);
     }
-    return translatedFailure(player, "rsp.home.unknown_action", [action]);
+    return reply(player, "rsp.home.unknown_action", [action], true);
 }
 function setHome(player, destinationName) {
     const key = normaliseName(destinationName);
     const destinations = loadDestinations();
     if (!destinations[key]) {
-        return translatedFailure(player, "rsp.visit.unknown", [key]);
+        return reply(player, "rsp.visit.unknown", [key], true);
     }
     system.run(() => {
         player.setDynamicProperty(HOME_PROPERTY, key);
@@ -127,13 +127,13 @@ function setHome(player, destinationName) {
 function teleportHome(player) {
     const storedHome = player.getDynamicProperty(HOME_PROPERTY);
     if (typeof storedHome !== "string") {
-        return translatedFailure(player, "rsp.home.not_set");
+        return reply(player, "rsp.home.not_set", [], true);
     }
     const key = normaliseName(storedHome);
     const destinations = loadDestinations();
     const destination = destinations[key];
     if (!destination) {
-        return translatedFailure(player, "rsp.home.deleted", [key]);
+        return reply(player, "rsp.home.deleted", [key], true);
     }
     system.run(() => {
         saveCurrentLocationAsBack(player);
@@ -160,19 +160,19 @@ function teleportHome(player) {
 function handleAdminCommand(origin, action, destinationName, x, y, z) {
     const player = origin.sourceEntity;
     if (!(player instanceof Player)) {
-        return failure("This command can only be used by a player.");
+        return failure();
     }
     if (!player.hasTag("plot_admin")) {
-        return translatedFailure(player, "rsp.error.no_permission");
+        return reply(player, "rsp.error.no_permission", [], true);
     }
     if (action === undefined) {
-        return translatedFailure(player, "rsp.admin.usage");
+        return reply(player, "rsp.admin.usage", [], true);
     }
     const destinations = loadDestinations();
     switch (action.toLowerCase()) {
         case "set": {
             if (destinationName === undefined) {
-                return translatedFailure(player, "rsp.admin.set_usage");
+                return reply(player, "rsp.admin.set_usage", [], true);
             }
             const location = player.location;
             const rotation = player.getRotation();
@@ -193,7 +193,7 @@ function handleAdminCommand(origin, action, destinationName, x, y, z) {
             system.run(() => {
                 saveDestinations(destinations);
             });
-            return translatedSuccess(player, alreadyExists
+            return reply(player, alreadyExists
                 ? "rsp.admin.updated"
                 : "rsp.admin.added", [
                 key,
@@ -204,21 +204,21 @@ function handleAdminCommand(origin, action, destinationName, x, y, z) {
         }
         case "remove": {
             if (destinationName === undefined) {
-                return translatedFailure(player, "rsp.admin.remove_usage");
+                return reply(player, "rsp.admin.remove_usage", [], true);
             }
             const key = normaliseName(destinationName);
             if (!destinations[key]) {
-                return translatedFailure(player, "rsp.admin.missing", [key]);
+                return reply(player, "rsp.admin.missing", [key], true);
             }
             delete destinations[key];
             system.run(() => {
                 saveDestinations(destinations);
             });
-            return translatedSuccess(player, "rsp.admin.removed", [key]);
+            return reply(player, "rsp.admin.removed", [key]);
         }
         case "debug":
             return dumpDynamicPropertyUsage(player);
         default:
-            return translatedFailure(player, "rsp.admin.unknown_action", [action]);
+            return reply(player, "rsp.admin.unknown_action", [action], true);
     }
 }

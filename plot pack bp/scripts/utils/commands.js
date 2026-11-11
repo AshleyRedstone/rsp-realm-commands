@@ -1,51 +1,18 @@
 import { CustomCommandStatus, Player, system } from "@minecraft/server";
-
-export function success(message) {
-    return {
-        status: CustomCommandStatus.Success,
-        message,
-    };
-}
-export function failure(message) {
-    return {
-        status: CustomCommandStatus.Failure,
-        message,
-    };
-}
-export function sendTranslation(player, key, parameters = []) {
+export const success = () => ({ status: CustomCommandStatus.Success });
+export const failure = () => ({ status: CustomCommandStatus.Failure });
+export const getCommandPlayer = origin => origin.sourceEntity instanceof Player ? origin.sourceEntity : undefined;
+export function sendLater(player, message) {
     system.run(() => {
-        player.sendMessage({
-            translate: key,
-            with: parameters,
-        });
+        if (player.isValid) player.sendMessage(message);
     });
 }
-export function translatedSuccess(player, key, parameters = []) {
-    sendTranslation(player, key, parameters);
-    return success();
+export function reply(player, key, parameters = [], failed = false) {
+    sendLater(player, { translate: key, with: parameters });
+    return failed ? failure() : success();
 }
-export function translatedFailure(player, key, parameters = []) {
-    sendTranslation(player, key, parameters);
-    return success();
-}
-export function translatedOriginFailure(origin, key, parameters = []) {
-    const player = origin.sourceEntity;
-    if (player instanceof Player) {
-        return translatedFailure(player, key, parameters);
-    }
-    return failure(key);
-}
-export function sendTranslationNow(player, key, parameters = []) {
-    player.sendMessage({
-        translate: key,
-        with: parameters,
-    });
-}
-
-export function getCommandPlayer(origin) {
-    const source = origin.sourceEntity;
-    if (source instanceof Player) {
-        return source;
-    }
-    return undefined;
+export function replyOrigin(origin, key, parameters = []) {
+    const player = getCommandPlayer(origin);
+    if (player) sendLater(player, { translate: key, with: parameters });
+    return failure();
 }
