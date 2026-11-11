@@ -9,16 +9,16 @@ export function handleGamemodeCommand(origin, mode) {
     const modes = {
         survival: "survival",
         s: "survival",
-        "0": "survival",
+        0: "survival",
         creative: "creative",
         c: "creative",
-        "1": "creative",
+        1: "creative",
         adventure: "adventure",
         a: "adventure",
-        "2": "adventure",
+        2: "adventure",
         spectator: "spectator",
         sp: "spectator",
-        "3": "spectator",
+        3: "spectator",
     };
     const gamemode = modes[mode.toLowerCase()];
     if (gamemode === undefined) {

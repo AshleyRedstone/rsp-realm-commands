@@ -1,6 +1,7 @@
 import { EntityComponentTypes } from "@minecraft/server";
+import {translatedSuccess} from "../utils/commands";
 
-export function handleNameCommand(origin, name) {
+function handleNameCommand(origin, name) {
     const player = origin.sourceEntity;
     if (!player) return;
 
@@ -21,5 +22,5 @@ export function handleNameCommand(origin, name) {
 
     container.setItem(slot, item);
 
-    player.sendMessage(`§aItem renamed to: §r${name}`);
+    translatedSuccess(player, "rsp:nameSuccess", [${item}]);
 }

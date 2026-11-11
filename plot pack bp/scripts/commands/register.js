@@ -4,7 +4,7 @@ import { handleBackCommand } from "../features/back.js";
 import { handlePingCommand } from "../features/ping.js";
 import { handlePlotCommand, handleShortPlotCommand } from "../features/plots.js";
 import { handleGamemodeCommand } from "../features/gamemode.js";
-import { handleNameCommand } from "../features/name.js";
+import handleNameCommand from "../features/name.js";
 
 system.beforeEvents.startup.subscribe((event) => {
     const registry = event.customCommandRegistry;
