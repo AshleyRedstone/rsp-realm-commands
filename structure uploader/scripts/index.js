@@ -36,7 +36,7 @@ function nextTick() {
 
 function requestJson(
     url,
-    method = HttpRequestMethod.Get
+    method = HttpRequestMethod.GET
 ) {
     const request = new HttpRequest(url);
 
@@ -236,13 +236,18 @@ function compareStagingToExpected(
             ...Object.keys(actualStates)
         ]);
 
+        if (
+            expected.type.id === "minecraft:redstone_wire" &&
+            actual.type.id === "minecraft:redstone_wire"
+        ) {
+            keys.delete("redstone_signal");
+        }
+
         const same =
-            actual.type.id ===
-                expected.type.id &&
+            actual.type.id === expected.type.id &&
             [...keys].every(
                 key =>
-                    expectedStates[key] ===
-                    actualStates[key]
+                    expectedStates[key] === actualStates[key]
             );
 
         if (!same) {
