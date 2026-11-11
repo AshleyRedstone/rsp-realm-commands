@@ -76,13 +76,13 @@ function placeLectern(player) {
 
         sendTranslationNow(
             player,
-            "plots.lectern.success"
+            "rsp.lectern.success"
         );
     }
     catch (error) {
         sendTranslationNow(
             player,
-            "plots.lectern.failure",
+            "rsp.lectern.failure",
             [String(error)]
         );
     }
@@ -96,13 +96,13 @@ function placeStrider(player) {
 
         sendTranslationNow(
             player,
-            "plots.strider.success"
+            "rsp.strider.success"
         );
     }
     catch (error) {
         sendTranslationNow(
             player,
-            "plots.strider.failure",
+            "rsp.strider.failure",
             [String(error)]
         );
     }
@@ -212,13 +212,13 @@ function placeRod(player, direction) {
         );
 
         player.sendMessage({
-            translate: "plots.rod.success",
+            translate: "rsp.rod.success",
             with: [direction],
         });
     }
     catch (error) {
         player.sendMessage({
-            translate: "plots.rod.failure",
+            translate: "rsp.rod.failure",
             with: [String(error)],
         });
     }
