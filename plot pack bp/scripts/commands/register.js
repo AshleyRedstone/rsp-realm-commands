@@ -4,6 +4,7 @@ import { handleBackCommand } from "../features/back.js";
 import { handlePingCommand } from "../features/ping.js";
 import { handlePlotCommand, handleShortPlotCommand } from "../features/plots.js";
 import { handleGamemodeCommand } from "../features/gamemode.js";
+import { handleNameCommand } from "../features/name.js";
 
 system.beforeEvents.startup.subscribe((event) => {
     const registry = event.customCommandRegistry;
@@ -171,4 +172,18 @@ registry.registerCommand(placeCommand, handlePlaceCommand);
         ],
     };
     registry.registerCommand(gamemodeCommand, handleGamemodeCommand);
+
+    const nameCommand = {
+        name: "rsp:name",
+        description: "Name held items",
+        permissionLevel: CommandPermissionLevel.Any,
+        cheatsRequired: false,
+        mandatoryParameters: [
+            {
+                name: "name",
+                type: CustomCommandParamType.String
+            }
+        ]
+    }
+    registry.registerCommand(nameCommand, handleNameCommand);
 });
