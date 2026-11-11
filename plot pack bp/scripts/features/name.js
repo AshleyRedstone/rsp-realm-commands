@@ -18,7 +18,7 @@ export default function handleNameCommand(origin, name) {
         const item = container.getItem(slot);
         if (!item) {
             player.sendMessage({
-                translate: "rsp:nameFailure"
+                translate: "rsp.nameFailure"
             });
             return;
         }
@@ -27,7 +27,7 @@ export default function handleNameCommand(origin, name) {
 
         container.setItem(slot, item);
 
-        player.sendMessage({ translate: "rsp:nameSuccess", with: [
+        player.sendMessage({ translate: "rsp.nameSuccess", with: [
             item.nameTag
         ] });
     });
