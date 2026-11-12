@@ -4,7 +4,8 @@ import { handleBackCommand } from "../features/back.js";
 import { handlePingCommand } from "../features/ping.js";
 import { handlePlotCommand, handleShortPlotCommand } from "../features/plots.js";
 import { handleGamemodeCommand } from "../features/gamemode.js";
-import handleNameCommand from "../features/name.js";
+import { handleNameCommand } from "../features/name.js";
+import {handleInputCommand} from "../features/wireless_input.js";
 
 system.beforeEvents.startup.subscribe((event) => {
     const registry = event.customCommandRegistry;
@@ -43,6 +44,15 @@ system.beforeEvents.startup.subscribe((event) => {
         "1",
         "2",
         "3",
+    ]);
+    registry.registerEnum("rsp:input_mode", [
+        "wireless",
+        "cooldown"
+    ]);
+
+    registry.registerEnum("rsp:input_edge", [
+        "rising",
+        "falling"
     ]);
     const placeCommand = {
     name: "rsp:place",
@@ -186,4 +196,26 @@ registry.registerCommand(placeCommand, handlePlaceCommand);
         ]
     }
     registry.registerCommand(nameCommand, handleNameCommand);
+    registry.registerCommand({
+        name: "rsp:input",
+        description: "Link a wireless input or configure its cooldown",
+        permissionLevel: CommandPermissionLevel.Any,
+        cheatsRequired: true,
+        mandatoryParameters: [
+            {
+                name: "rsp:input_mode",
+                type: CustomCommandParamType.Enum
+            }
+        ],
+        optionalParameters: [
+            {
+                name: "rsp:input_edge",
+                type: CustomCommandParamType.Enum
+            },
+            {
+                name: "ticks",
+                type: CustomCommandParamType.Integer
+            }
+        ]
+    }, handleInputCommand);
 });

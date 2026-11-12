@@ -80,3 +80,5 @@ rsp.place.rod.player_direction=
 rsp.place.back=
 rsp.chat.format=
 rsp.handleInputsSuccess=
+rsp.noInputFailure=
+rsp.inputRemoved=

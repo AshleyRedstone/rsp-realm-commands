@@ -80,3 +80,5 @@ rsp.place.rod.player_direction=Player Direction
 rsp.place.back=Back
 rsp.chat.format=<%1> %2
 rsp.handleInputsSuccess=§aWireless input linked to the selected block.
+rsp.noInputFailure=No input selected.
+rsp.inputRemoved=The input block has been removed.
