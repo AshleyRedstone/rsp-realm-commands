@@ -1,13 +1,13 @@
 import { CommandPermissionLevel, CustomCommandParamType, system } from "@minecraft/server";
 import { handlePlaceCommand } from "../features/place.js";
 import { handleBackCommand } from "../features/back.js";
-import { handlePingCommand } from "../features/ping.js";
 import { handlePlotCommand, handleShortPlotCommand } from "../features/plots.js";
 import { handleGamemodeCommand } from "../features/gamemode.js";
 import { handleNameCommand } from "../features/name.js";
 import { handleInputCommand } from "../features/wireless_input.js";
 import { handleSpawnCommand } from "../features/spawn.js";
 import { handleStructureCleanupCommand } from "../features/worldedit_structure_cleanup.js";
+import { handleSettingsCommand } from "../features/settings.js";
 
 system.beforeEvents.startup.subscribe((event) => {
     const registry = event.customCommandRegistry;
@@ -78,29 +78,6 @@ registry.registerCommand(placeCommand, handlePlaceCommand);
     };
     registry.registerCommand(backCommand, handleBackCommand);
     registry.registerCommand(shortBackCommand, handleBackCommand);
-    const pingCommand = {
-        name: "rsp:ping",
-        description: "Manage your ping settings",
-        permissionLevel: CommandPermissionLevel.Any,
-        cheatsRequired: false,
-        mandatoryParameters: [
-            {
-                name: "rsp:ping_mode",
-                type: CustomCommandParamType.Enum,
-            },
-        ],
-        optionalParameters: [
-            {
-                name: "rsp:ping_action",
-                type: CustomCommandParamType.Enum,
-            },
-            {
-                name: "phrase",
-                type: CustomCommandParamType.String,
-            },
-        ],
-    };
-    registry.registerCommand(pingCommand, handlePingCommand);
     const plotCommand = {
         name: "rsp:plot",
         description: "Visit or manage plot destinations",
@@ -234,4 +211,10 @@ registry.registerCommand(placeCommand, handlePlaceCommand);
         permissionLevel: CommandPermissionLevel.GameDirectors,
         cheatsRequired: true
     }, handleStructureCleanupCommand);
+    registry.registerCommand({
+        name: "rsp:settings",
+        description: "Open your personal settings",
+        permissionLevel: CommandPermissionLevel.Any,
+        cheatsRequired: false
+    }, handleSettingsCommand);
 });

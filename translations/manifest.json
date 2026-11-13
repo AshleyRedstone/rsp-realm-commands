@@ -3,7 +3,7 @@
     "header": {
         "name": "RSP Addon translations",
         "description": "RSP Addon translations",
-        "uuid": "bc95ad4b-b672-464b-8f0e-03407f20f6gt",
+        "uuid": "b925daa7-7dfc-4936-9255-1c2cd63369db",
         "version": [
             1,
             0,
@@ -28,7 +28,7 @@
     ],
     "dependencies": [
         {
-            "uuid": "bc95ad4b-b672-464b-8f0e-03407f20f6gt",
+            "uuid": "1df08878-ee9a-46b2-a100-93fd93cb7e31",
             "version": [ 1, 0, 0 ]
         }
     ]
