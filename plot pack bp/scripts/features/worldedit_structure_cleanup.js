@@ -1,4 +1,4 @@
-import {world, system, CustomCommandStatus} from "@minecraft/server";
+import {world, system, CustomCommandStatus, Player} from "@minecraft/server";
 
 const CLEANUP_INTERVAL = 30 * 60 * 20; // 30 minutes
 const STRUCTURE_PREFIX = "buffer_";

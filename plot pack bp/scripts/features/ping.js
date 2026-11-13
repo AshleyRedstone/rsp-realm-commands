@@ -1,5 +1,4 @@
 import { system, world } from "@minecraft/server";
-import { reply, failure, getCommandPlayer } from "../utils/commands.js";
 
 const PING_WHITELIST_PROPERTY = "rsp:ping_whitelist";
 const PING_BLACKLIST_PROPERTY = "rsp:ping_blacklist";
@@ -57,11 +56,9 @@ world.beforeEvents.chatSend.subscribe((event) => {
     const sender = event.sender;
     const originalMessage = event.message;
 
-    // Cancel normal chat so RSP can apply its formatting.
     event.cancel = true;
 
     system.run(() => {
-        // Forward the original, unformatted message to DiscordCC.
         try {
             const payload = encodeURIComponent(JSON.stringify({
                 username: sender.name,
@@ -150,88 +147,4 @@ function containsPingTerm(message, term) {
 }
 function escapePingRegex(text) {
     return text.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-}
-
-export function handlePingCommand(origin, modeArgument, actionArgument, phraseArgument) {
-    const player = getCommandPlayer(origin);
-    if (player === undefined) {
-        return failure();
-    }
-    const mode = modeArgument.toLowerCase();
-    if (mode === "toggle") {
-        const stored = player.getDynamicProperty(PING_ENABLED_PROPERTY);
-        const currentlyEnabled = typeof stored === "boolean"
-            ? stored
-            : true;
-        const newValue = !currentlyEnabled;
-        system.run(() => {
-            player.setDynamicProperty(PING_ENABLED_PROPERTY, newValue);
-        });
-        return reply(player, newValue
-            ? "rsp.ping.enabled"
-            : "rsp.ping.disabled");
-    }
-    if (mode !== "whitelist" &&
-        mode !== "blacklist") {
-        return reply(player, "rsp.ping.unknown_list", [modeArgument], true);
-    }
-    if (actionArgument === undefined) {
-        return reply(player, "rsp.ping.action_required", [], true);
-    }
-    const action = actionArgument.toLowerCase();
-    const propertyId = mode === "whitelist"
-        ? PING_WHITELIST_PROPERTY
-        : PING_BLACKLIST_PROPERTY;
-    const values = loadPingList(player, propertyId);
-    switch (action) {
-        case "add": {
-            if (phraseArgument === undefined) {
-                return reply(player, "rsp.ping.phrase_required", [], true);
-            }
-            const phrase = normalisePingPhrase(phraseArgument);
-            if (phrase.length === 0) {
-                return reply(player, "rsp.ping.phrase_required", [], true);
-            }
-            if (values.includes(phrase)) {
-                return reply(player, "rsp.ping.already_exists", [phrase, mode], true);
-            }
-            system.run(() => {
-                savePingList(player, propertyId, [
-                    ...values,
-                    phrase,
-                ]);
-            });
-            return reply(player, "rsp.ping.added", [phrase, mode]);
-        }
-        case "remove": {
-            if (phraseArgument === undefined) {
-                return reply(player, "rsp.ping.phrase_required", [], true);
-            }
-            const phrase = normalisePingPhrase(phraseArgument);
-            if (!values.includes(phrase)) {
-                return reply(player, "rsp.ping.not_found", [phrase, mode], true);
-            }
-            system.run(() => {
-                savePingList(player, propertyId, values.filter((value) => value !== phrase));
-            });
-            return reply(player, "rsp.ping.removed", [phrase, mode]);
-        }
-        case "list": {
-            if (values.length === 0) {
-                return reply(player, "rsp.ping.list_empty", [mode]);
-            }
-            return reply(player, "rsp.ping.list", [
-                mode,
-                values.join(", "),
-            ]);
-        }
-        case "clear": {
-            system.run(() => {
-                player.setDynamicProperty(propertyId, undefined);
-            });
-            return reply(player, "rsp.ping.cleared", [mode]);
-        }
-        default:
-            return reply(player, "rsp.ping.unknown_action", [actionArgument], true);
-    }
 }

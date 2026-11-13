@@ -39,12 +39,28 @@
     ],
     "dependencies": [
         {
+            "uuid": "bc95ad4b-b672-464b-8f0e-03407f20f6gt",
+            "version": [ 1, 0, 0 ]
+        },
+        {
             "module_name": "@minecraft/server",
-            "version": "2.0.0"
+            "version": "beta"
         },
         {
             "module_name": "@minecraft/server-ui",
-            "version": "2.0.0"
+            "version": "beta"
+        },
+        {
+            "module_name": "@minecraft/server-net",
+            "version": "beta"
+        },
+        {
+            "module_name": "@minecraft/server-admin",
+            "version": "beta"
+        },
+        {
+            "module_name": "@minecraft/server-gametest",
+            "version": "beta"
         }
     ]
 }

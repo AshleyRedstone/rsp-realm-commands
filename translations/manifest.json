@@ -1,8 +1,8 @@
 {
     "format_version": 2,
     "header": {
-        "name": "Plot Translations",
-        "description": "Plot teleports translation strings",
+        "name": "RSP Addon translations",
+        "description": "RSP Addon translations",
         "uuid": "bc95ad4b-b672-464b-8f0e-03407f20f6gt",
         "version": [
             1,
@@ -24,6 +24,12 @@
                 0,
                 0
             ]
+        }
+    ],
+    "dependencies": [
+        {
+            "uuid": "bc95ad4b-b672-464b-8f0e-03407f20f6gt",
+            "version": [ 1, 0, 0 ]
         }
     ]
 }
