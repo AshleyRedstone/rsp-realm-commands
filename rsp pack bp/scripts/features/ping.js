@@ -1,54 +1,77 @@
 import { system, world } from "@minecraft/server";
 
 const PING_WHITELIST_PROPERTY = "rsp:ping_whitelist";
-const PING_BLACKLIST_PROPERTY = "rsp:ping_blacklist";
 const PING_ENABLED_PROPERTY = "rsp:ping_enabled";
+const PING_SOUND = "random.orb";
+
 export function normalisePingPhrase(phrase) {
     return phrase.trim().toLowerCase();
 }
+
 export function loadPingList(player, propertyId) {
     const stored = player.getDynamicProperty(propertyId);
+
     if (typeof stored !== "string") {
         return [];
     }
+
     try {
         const parsed = JSON.parse(stored);
+
         if (!Array.isArray(parsed)) {
             return [];
         }
+
         return parsed
             .filter((value) => typeof value === "string")
             .map(normalisePingPhrase)
             .filter((value) => value.length > 0);
-    }
-    catch {
+    } catch {
         return [];
     }
 }
-export function savePingList(player, propertyId, values) {
-    const uniqueValues = [...new Set(values
-            .map(normalisePingPhrase)
-            .filter((value) => value.length > 0))];
-    if (uniqueValues.length === 0) {
-        player.setDynamicProperty(propertyId, undefined);
-        return;
-    }
-    player.setDynamicProperty(propertyId, JSON.stringify(uniqueValues));
-}
+
 function getPingRules(player) {
     return {
-        whitelist: loadPingList(player, PING_WHITELIST_PROPERTY),
-        blacklist: loadPingList(player, PING_BLACKLIST_PROPERTY),
+        terms: loadPingList(player, PING_WHITELIST_PROPERTY)
     };
 }
 
-const PING_SOUND = "random.orb";
+function getMatchedPingTerms(message, target, rules) {
+    const matchedTerms = [];
+    const playerMention = `@${target.name}`;
+
+    if (containsPingTerm(message, playerMention)) {
+        matchedTerms.push(playerMention);
+    }
+
+    for (const term of rules.terms) {
+        if (containsPingTerm(message, term)) {
+            matchedTerms.push(term);
+        }
+    }
+
+    return [...new Set(matchedTerms)];
+}
+
+function arePingsEnabled(player) {
+    const stored = player.getDynamicProperty(PING_ENABLED_PROPERTY);
+
+    return typeof stored === "boolean"
+        ? stored
+        : true;
+}
 
 function playPingSound(player) {
     try {
-        player.playSound(PING_SOUND, { volume: 1, pitch: 1 });
+        player.playSound(PING_SOUND, {
+            volume: 1,
+            pitch: 1
+        });
     } catch (error) {
-        console.warn(`[Ping] Failed to play sound for ${player.name}: ${error}`);
+        console.warn(
+            `[Ping] Failed to play sound for ${player.name}: ${error}`
+        );
     }
 }
 
@@ -73,10 +96,13 @@ world.beforeEvents.chatSend.subscribe((event) => {
                 `[RSP Chat] Failed to relay message to DiscordCC: ${error}`
             );
         }
+
         let formattedMessage = originalMessage;
 
         for (const target of world.getAllPlayers()) {
-            if (!arePingsEnabled(target)) continue;
+            if (!arePingsEnabled(target)) {
+                continue;
+            }
 
             const rules = getPingRules(target);
 
@@ -86,7 +112,9 @@ world.beforeEvents.chatSend.subscribe((event) => {
                 rules
             );
 
-            if (matchedTerms.length === 0) continue;
+            if (matchedTerms.length === 0) {
+                continue;
+            }
 
             for (const term of matchedTerms) {
                 formattedMessage = highlightPingTerm(
@@ -99,52 +127,30 @@ world.beforeEvents.chatSend.subscribe((event) => {
                 playPingSound(target);
             }
         }
-        world.sendMessage(`<${sender.name}> ${formattedMessage}`);
+
+        world.sendMessage(
+            `<${sender.name}> ${formattedMessage}`
+        );
     });
 });
-function getMatchedPingTerms(message, target, rules) {
-    const matchedTerms = [];
-    const containsBlacklistedTerm = rules.blacklist.some((term) => containsPingTerm(message, term));
-    if (containsBlacklistedTerm) {
-        return matchedTerms;
-    }
-    const playerMention = `@${target.name}`;
-    if (containsPingTerm(message, playerMention)) {
-        matchedTerms.push(playerMention);
-    }
-    for (const term of rules.whitelist) {
-        if (containsPingTerm(message, term)) {
-            matchedTerms.push(term);
-        }
-    }
-    return matchedTerms;
-}
-function highlightPingTerm(message, term) {
-    const cleanedTerm = term.trim();
-    if (cleanedTerm.length === 0) {
-        return message;
-    }
-    const pattern = new RegExp(`(^|[^\\p{L}\\p{N}_])` +
-        `(${escapePingRegex(cleanedTerm)})` +
-        `(?=$|[^\\p{L}\\p{N}_])`, "giu");
-    return message.replace(pattern, `$1§e$2§r`);
-}
-function arePingsEnabled(player) {
-    const stored = player.getDynamicProperty(PING_ENABLED_PROPERTY);
-    return typeof stored === "boolean"
-        ? stored
-        : true;
-}
+
 function containsPingTerm(message, term) {
     const cleanedTerm = term.trim();
+
     if (cleanedTerm.length === 0) {
         return false;
     }
-    const pattern = new RegExp(`(^|[^\\p{L}\\p{N}_])` +
+
+    const pattern = new RegExp(
+        `(^|[^\\p{L}\\p{N}_])` +
         `${escapePingRegex(cleanedTerm)}` +
-        `(?=$|[^\\p{L}\\p{N}_])`, "iu");
+        `(?=$|[^\\p{L}\\p{N}_])`,
+        "iu"
+    );
+
     return pattern.test(message);
 }
+
 function escapePingRegex(text) {
     return text.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
