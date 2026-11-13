@@ -5,7 +5,8 @@ import { handlePingCommand } from "../features/ping.js";
 import { handlePlotCommand, handleShortPlotCommand } from "../features/plots.js";
 import { handleGamemodeCommand } from "../features/gamemode.js";
 import { handleNameCommand } from "../features/name.js";
-import {handleInputCommand} from "../features/wireless_input.js";
+import { handleInputCommand } from "../features/wireless_input.js";
+import { handleSpawnCommand } from "../features/spawn.js";
 
 system.beforeEvents.startup.subscribe((event) => {
     const registry = event.customCommandRegistry;
@@ -218,4 +219,11 @@ registry.registerCommand(placeCommand, handlePlaceCommand);
             }
         ]
     }, handleInputCommand);
+    const spawnCommand = {
+        name: "rsp:spawn",
+        description: "Teleports you to spawn",
+        permissionLevel: CommandPermissionLevel.Any,
+        cheatsRequired: true
+    }
+    registry.registerCommand(spawnCommand, handleSpawnCommand);
 });
