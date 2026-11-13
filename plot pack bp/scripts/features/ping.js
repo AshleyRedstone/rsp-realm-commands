@@ -56,20 +56,53 @@ function playPingSound(player) {
 world.beforeEvents.chatSend.subscribe((event) => {
     const sender = event.sender;
     const originalMessage = event.message;
+
+    // Cancel normal chat so RSP can apply its formatting.
     event.cancel = true;
+
     system.run(() => {
+        // Forward the original, unformatted message to DiscordCC.
+        try {
+            const payload = encodeURIComponent(JSON.stringify({
+                username: sender.name,
+                message: originalMessage
+            }));
+
+            world.getDimension("overworld").runCommand(
+                `scriptevent rsp:original_chat ${payload}`
+            );
+        } catch (error) {
+            console.warn(
+                `[RSP Chat] Failed to relay message to DiscordCC: ${error}`
+            );
+        }
         let formattedMessage = originalMessage;
+
         for (const target of world.getAllPlayers()) {
             if (!arePingsEnabled(target)) continue;
+
             const rules = getPingRules(target);
-            const matchedTerms = getMatchedPingTerms(originalMessage, target, rules);
+
+            const matchedTerms = getMatchedPingTerms(
+                originalMessage,
+                target,
+                rules
+            );
+
             if (matchedTerms.length === 0) continue;
+
             for (const term of matchedTerms) {
-                formattedMessage = highlightPingTerm(formattedMessage, term);
+                formattedMessage = highlightPingTerm(
+                    formattedMessage,
+                    term
+                );
             }
-            if (target.id !== sender.id) playPingSound(target);
+
+            if (target.id !== sender.id) {
+                playPingSound(target);
+            }
         }
-        world.sendMessage({ translate: "rsp.chat.format", with: [sender.name, formattedMessage] });
+        world.sendMessage(`<${sender.name}> ${formattedMessage}`);
     });
 });
 function getMatchedPingTerms(message, target, rules) {
