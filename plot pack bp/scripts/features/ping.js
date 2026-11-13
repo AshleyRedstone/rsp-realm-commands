@@ -56,20 +56,27 @@ function playPingSound(player) {
 world.beforeEvents.chatSend.subscribe((event) => {
     const sender = event.sender;
     const originalMessage = event.message;
-    event.cancel = true;
+
+    // Keep the original chat event active for DiscordCC.
+    // Do not use event.cancel = true.
+
     system.run(() => {
-        let formattedMessage = originalMessage;
         for (const target of world.getAllPlayers()) {
+            if (target.id === sender.id) continue;
             if (!arePingsEnabled(target)) continue;
+
             const rules = getPingRules(target);
-            const matchedTerms = getMatchedPingTerms(originalMessage, target, rules);
+
+            const matchedTerms = getMatchedPingTerms(
+                originalMessage,
+                target,
+                rules
+            );
+
             if (matchedTerms.length === 0) continue;
-            for (const term of matchedTerms) {
-                formattedMessage = highlightPingTerm(formattedMessage, term);
-            }
-            if (target.id !== sender.id) playPingSound(target);
+
+            playPingSound(target);
         }
-        world.sendMessage({ translate: "rsp.chat.format", with: [sender.name, formattedMessage] });
     });
 });
 function getMatchedPingTerms(message, target, rules) {
