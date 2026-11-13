@@ -7,6 +7,7 @@ import { handleGamemodeCommand } from "../features/gamemode.js";
 import { handleNameCommand } from "../features/name.js";
 import { handleInputCommand } from "../features/wireless_input.js";
 import { handleSpawnCommand } from "../features/spawn.js";
+import { handleStructureCleanupCommand } from "../features/worldedit_structure_cleanup.js";
 
 system.beforeEvents.startup.subscribe((event) => {
     const registry = event.customCommandRegistry;
@@ -197,7 +198,7 @@ registry.registerCommand(placeCommand, handlePlaceCommand);
         ]
     }
     registry.registerCommand(nameCommand, handleNameCommand);
-    registry.registerCommand({
+    const inputCommand = {
         name: "rsp:input",
         description: "Link a wireless input or configure its cooldown",
         permissionLevel: CommandPermissionLevel.Any,
@@ -218,7 +219,8 @@ registry.registerCommand(placeCommand, handlePlaceCommand);
                 type: CustomCommandParamType.Integer
             }
         ]
-    }, handleInputCommand);
+    };
+    registry.registerCommand(inputCommand, handleInputCommand);
     const spawnCommand = {
         name: "rsp:spawn",
         description: "Teleports you to spawn",
@@ -226,4 +228,10 @@ registry.registerCommand(placeCommand, handlePlaceCommand);
         cheatsRequired: true
     }
     registry.registerCommand(spawnCommand, handleSpawnCommand);
+    registry.registerCommand({
+        name: "rsp:structurecleanup",
+        description: "Delete all temporary buffer structures",
+        permissionLevel: CommandPermissionLevel.GameDirectors,
+        cheatsRequired: true
+    }, handleStructureCleanupCommand);
 });

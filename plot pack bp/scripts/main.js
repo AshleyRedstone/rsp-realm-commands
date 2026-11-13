@@ -5,5 +5,7 @@ import "./features/plots.js";
 import "./features/place.js";
 import "./features/gamemode.js";
 import "./features/wireless_input.js";
+import "./features/spawn.js";
+import "./features/worldedit_structure_cleanup.js";
 import "./commands/register.js";
 import "./utils/console_chat.js";
