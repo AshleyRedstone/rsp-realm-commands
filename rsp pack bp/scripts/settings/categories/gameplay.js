@@ -2,7 +2,7 @@ import { registerSettingsCategory } from "../registry";
 
 registerSettingsCategory({
     id: "gameplay",
-    name: "rsp.settings.gameplay.title",
+    title: "rsp.settings.gameplay.title",
     settings: [
         {
             id: "nodrops",

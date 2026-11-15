@@ -28,6 +28,12 @@ export function registerSettingsCategory(category) {
         } else if (typeof setting.property !== "string" || !setting.property.trim()) {
             throw new TypeError(`Dynamic-property setting ${setting.id} requires property`);
         }
+        if (setting.type === "stringList") {
+            for (const key of ["countTitle", "addTitle", "removeTitle", "valueTitle", "placeholderTitle", "emptyTitle"]) {
+                if (setting[key] !== undefined && (typeof setting[key] !== "string" || !setting[key]))
+                    throw new TypeError(`Invalid ${key} translation key for ${setting.id}`);
+            }
+        }
         if (setting.type === "dropdown" && (!Array.isArray(setting.options) || !setting.options.length))
             throw new TypeError(`Dropdown ${setting.id} requires options`);
         if (setting.type === "slider" && (!(setting.max > setting.min) || !(setting.step > 0)))

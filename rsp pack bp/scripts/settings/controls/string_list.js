@@ -6,10 +6,16 @@ import { reopen, reportError } from "../renderer.js";
 export async function openStringList(player, setting, back) {
     try {
         const values = readSetting(player, setting);
+        const countKey = setting.countTitle ?? "rsp.settings.list.count";
+        const countText = tr(countKey, values.length);
+        // RawMessage concatenation preserves translations and substitution values.
+        const body = values.length
+            ? { rawtext: [countText, { text: "\n\n" + values.map(value => `• ${value}`).join("\n") }] }
+            : countText;
         const form = new ActionFormData().title(tr(setting.title))
-            .body(tr("rsp.settings.list.count", values.length))
-            .button(tr("rsp.settings.list.add"))
-            .button(tr("rsp.settings.list.remove"))
+            .body(body)
+            .button(tr(setting.addTitle ?? "rsp.settings.list.add"))
+            .button(tr(setting.removeTitle ?? "rsp.settings.list.remove"))
             .button(tr("rsp.settings.back"));
         const result = await form.show(player);
         if (result.canceled) return;
@@ -21,13 +27,13 @@ export async function openStringList(player, setting, back) {
 
 async function addEntry(player, setting, back) {
     try {
-        const form = new ModalFormData().title(tr("rsp.settings.list.add"))
-            .textField(tr("rsp.settings.list.value"), tr("rsp.settings.list.placeholder"));
+        const form = new ModalFormData().title(tr(setting.addTitle ?? "rsp.settings.list.add"))
+            .textField(tr(setting.valueTitle ?? "rsp.settings.list.value"), tr(setting.placeholderTitle ?? "rsp.settings.list.placeholder"));
         const result = await form.show(player);
         if (result.canceled) return reopen(() => openStringList(player, setting, back));
         const value = normaliseString(result.formValues?.[0], setting.options);
         if (!value && !setting.options?.allowEmpty) {
-            player.sendMessage(tr("rsp.settings.list.empty"));
+            player.sendMessage(tr(setting.emptyTitle ?? "rsp.settings.list.empty"));
         } else {
             const values = readSetting(player, setting);
             if (!values.includes(value)) writeSetting(player, setting, [...values, value]);
@@ -40,7 +46,7 @@ async function removeEntry(player, setting, back) {
     try {
         const values = readSetting(player, setting);
         if (!values.length) return reopen(() => openStringList(player, setting, back));
-        const form = new ActionFormData().title(tr("rsp.settings.list.remove"));
+        const form = new ActionFormData().title(tr(setting.removeTitle ?? "rsp.settings.list.remove"));
         for (const value of values) form.button(value);
         form.button(tr("rsp.settings.back"));
         const result = await form.show(player);

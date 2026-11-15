@@ -1,5 +1,7 @@
 import { registerSettingsCategory } from "../registry.js";
 
+// Ping notifications are always triggered by direct @mentions and these extra terms.
+// The existing whitelist dynamic property is deliberately retained to preserve saved terms.
 registerSettingsCategory({
     id: "ping",
     title: "rsp.settings.ping.title",
@@ -18,6 +20,12 @@ registerSettingsCategory({
             type: "stringList",
             title: "rsp.settings.ping.terms",
             property: "rsp:ping_whitelist",
+            countTitle: "rsp.settings.ping.entries",
+            addTitle: "rsp.settings.ping.add",
+            removeTitle: "rsp.settings.ping.remove",
+            valueTitle: "rsp.settings.ping.phrase",
+            placeholderTitle: "rsp.settings.ping.placeholder",
+            emptyTitle: "rsp.settings.ping.empty",
             options: { normalise: "lowercase", unique: true, allowEmpty: false }
         }
     ]

@@ -1,5 +1,6 @@
 import { Player, system, CustomCommandStatus } from "@minecraft/server";
 import "../settings/categories/ping.js";
+import "../settings/categories/gameplay.js";
 import { showSettings } from "../settings/registry.js";
 
 export function handleSettingsCommand(origin) {
