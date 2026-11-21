@@ -2,7 +2,6 @@ import {system, Player, CustomCommandStatus} from "@minecraft/server";
 import { reply, replyOrigin, failure } from "../utils/commands.js";
 import { normaliseName, loadDestinations, saveDestinations } from "../utils/destinations.js";
 import { saveCurrentLocationAsBack } from "./back.js";
-import { dumpDynamicPropertyUsage } from "./debug.js";
 
 const HOME_PROPERTY = "rsp:home";
 export function handlePlotCommand(origin, mode, argument, destinationName, x, y, z) {
@@ -216,8 +215,6 @@ function handleAdminCommand(origin, action, destinationName, x, y, z) {
             });
             return reply(player, "rsp.admin.removed", [key]);
         }
-        case "debug":
-            return dumpDynamicPropertyUsage(player);
         default:
             return reply(player, "rsp.admin.unknown_action", [action], true);
     }

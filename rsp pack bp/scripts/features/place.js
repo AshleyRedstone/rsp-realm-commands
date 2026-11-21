@@ -2,10 +2,6 @@ import { system } from "@minecraft/server";
 import { ActionFormData } from "@minecraft/server-ui";
 import { failure, success, getCommandPlayer } from "../utils/commands.js";
 
-// ============================================================
-// /place
-// ============================================================
-
 export function handlePlaceCommand(origin) {
     const player = getCommandPlayer(origin);
 
@@ -19,11 +15,6 @@ export function handlePlaceCommand(origin) {
 
     return success();
 }
-
-
-// ============================================================
-// Place menu
-// ============================================================
 
 function showPlaceMenu(player) {
     const form = new ActionFormData()
@@ -62,11 +53,6 @@ function showPlaceMenu(player) {
         );
     });
 }
-
-
-// ============================================================
-// Lectern
-// ============================================================
 
 function placeLectern(player) {
     try {

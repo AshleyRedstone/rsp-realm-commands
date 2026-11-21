@@ -8,7 +8,6 @@ export async function openStringList(player, setting, back) {
         const values = readSetting(player, setting);
         const countKey = setting.countTitle ?? "rsp.settings.list.count";
         const countText = tr(countKey, values.length);
-        // RawMessage concatenation preserves translations and substitution values.
         const body = values.length
             ? { rawtext: [countText, { text: "\n\n" + values.map(value => `• ${value}`).join("\n") }] }
             : countText;

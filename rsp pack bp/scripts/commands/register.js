@@ -8,12 +8,13 @@ import { handleInputCommand } from "../features/wireless_input.js";
 import { handleSpawnCommand } from "../features/spawn.js";
 import { handleStructureCleanupCommand } from "../features/worldedit_structure_cleanup.js";
 import { handleSettingsCommand } from "../features/settings.js";
+import { handleDebugCommand } from "../features/debug.js";
 
 system.beforeEvents.startup.subscribe((event) => {
     const registry = event.customCommandRegistry;
     registry.registerEnum("rsp:plot_mode", ["visit", "home", "list", "admin"]);
     registry.registerEnum("rsp:short_mode", ["v", "h", "l", "a"]);
-    registry.registerEnum("rsp:admin_action", ["set", "remove", "debug"]);
+    registry.registerEnum("rsp:admin_action", ["set", "remove"]);
     registry.registerEnum("rsp:rod_direction", [
         "down",
         "up",
@@ -211,6 +212,12 @@ registry.registerCommand(placeCommand, handlePlaceCommand);
         permissionLevel: CommandPermissionLevel.GameDirectors,
         cheatsRequired: true
     }, handleStructureCleanupCommand);
+    registry.registerCommand({
+        name: "rsp:debug",
+        description: "Inspect and delete dynamic properties",
+        permissionLevel: CommandPermissionLevel.GameDirectors,
+        cheatsRequired: false
+    }, handleDebugCommand);
     registry.registerCommand({
         name: "rsp:settings",
         description: "Open your personal settings",

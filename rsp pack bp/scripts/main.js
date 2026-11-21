@@ -1,5 +1,4 @@
 import "./features/back.js";
-import "./features/ping.js";
 import "./features/debug.js";
 import "./features/plots.js";
 import "./features/place.js";
@@ -9,6 +8,9 @@ import "./features/spawn.js";
 import "./features/worldedit_structure_cleanup.js";
 import "./settings/categories/ping.js";
 import "./settings/categories/gameplay.js";
+import "./settings/features/autoset_blocks.js";
+import "./settings/features/nodrops.js";
+import "./settings/features/ping.js";
 import "./settings/registry.js";
 import "./settings/renderer.js";
 import "./commands/register.js";

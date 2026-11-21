@@ -1,7 +1,5 @@
 import { registerSettingsCategory } from "../registry.js";
 
-// Ping notifications are always triggered by direct @mentions and these extra terms.
-// The existing whitelist dynamic property is deliberately retained to preserve saved terms.
 registerSettingsCategory({
     id: "ping",
     title: "rsp.settings.ping.title",
