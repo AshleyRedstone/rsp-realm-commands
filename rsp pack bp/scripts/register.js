@@ -1,14 +1,14 @@
 import { CommandPermissionLevel, CustomCommandParamType, system } from "@minecraft/server";
-import { handlePlaceCommand } from "../features/place.js";
-import { handleBackCommand } from "../features/back.js";
-import { handlePlotCommand, handleShortPlotCommand } from "../features/plots.js";
-import { handleGamemodeCommand } from "../features/gamemode.js";
-import { handleNameCommand } from "../features/name.js";
-import { handleInputCommand } from "../features/wireless_input.js";
-import { handleSpawnCommand } from "../features/spawn.js";
-import { handleStructureCleanupCommand } from "../features/worldedit_structure_cleanup.js";
-import { handleSettingsCommand } from "../features/settings.js";
-import { handleDebugCommand } from "../features/debug.js";
+import { handlePlaceCommand } from "./commands/place.js";
+import { handleBackCommand } from "./commands/back.js";
+import { handlePlotCommand, handleShortPlotCommand } from "./commands/plots.js";
+import { handleGamemodeCommand } from "./commands/gamemode.js";
+import { handleNameCommand } from "./commands/name.js";
+import { handleInputCommand } from "./commands/wireless_input.js";
+import { handleSpawnCommand } from "./commands/spawn.js";
+import { handleStructureCleanupCommand } from "./commands/worldedit_structure_cleanup.js";
+import { handleSettingsCommand } from "./commands/settings.js";
+import { handleDebugCommand } from "./commands/debug.js";
 
 system.beforeEvents.startup.subscribe((event) => {
     const registry = event.customCommandRegistry;

@@ -1,6 +1,6 @@
 import { system } from "@minecraft/server";
 import { ActionFormData } from "@minecraft/server-ui";
-import { failure, success, getCommandPlayer } from "../utils/commands.js";
+import { failure, success, getCommandPlayer } from "../utils/helper_functions.js";
 
 export function handlePlaceCommand(origin) {
     const player = getCommandPlayer(origin);

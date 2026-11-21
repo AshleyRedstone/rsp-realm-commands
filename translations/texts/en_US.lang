@@ -116,3 +116,5 @@ rsp.settings.gameplay.auto_cauldron.disable=Disable auto water cauldron
 rsp.settings.gameplay.auto_cauldron.enable=Enable auto water cauldron
 rsp.settings.gameplay.auto_slab.disable=Disable auto top slab
 rsp.settings.gameplay.auto_slab.enable=Enable auto top slab
+rsp.settings.gameplay.no_item_pickup.disable=Disable no item pickup
+rsp.settings.gameplay.no_item_pickup.enable=Enable no item pickup

@@ -43,6 +43,16 @@ registerSettingsCategory({
             storage: "tag",
             tag: "auto_slab",
             default: false
+        },
+        {
+            id: "no_item_pickup",
+            type: "toggle",
+            title: "rsp.settings.no_item_pickup.enabled",
+            enabledTitle: "rsp.settings.gameplay.no_item_pickup.disable",
+            disabledTitle: "rsp.settings.gameplay.no_item_pickup.enable",
+            storage: "tag",
+            tag: "no_item_pickup",
+            default: false
         }
     ]
 });

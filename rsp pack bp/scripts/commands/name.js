@@ -1,5 +1,5 @@
 import { system, EntityComponentTypes } from "@minecraft/server";
-import { success } from "../utils/commands.js";
+import { success } from "../utils/helper_functions.js";
 
 export function handleNameCommand(origin, name) {
     const player = origin.sourceEntity;

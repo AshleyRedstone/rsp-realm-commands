@@ -1,5 +1,5 @@
 import { world, system, Player, EntityComponentTypes } from "@minecraft/server";
-import {failure, success} from "../utils/commands";
+import {failure, success} from "../utils/helper_functions";
 
 const LINK = "rsp:wireless_input";
 const DIMENSION = "rsp:wireless_dimension";

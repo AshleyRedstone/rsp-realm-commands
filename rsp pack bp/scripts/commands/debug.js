@@ -1,6 +1,6 @@
 import { Player, system, world } from "@minecraft/server";
 import { ActionFormData, MessageFormData } from "@minecraft/server-ui";
-import { success, failure } from "../utils/commands.js";
+import { success, failure } from "../utils/helper_functions.js";
 
 const dimensions = ["overworld", "nether", "the_end"];
 const valid = player => player?.isValid;

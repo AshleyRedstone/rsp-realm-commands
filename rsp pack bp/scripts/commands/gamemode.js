@@ -1,5 +1,5 @@
 import { system } from "@minecraft/server";
-import { failure, success, sendLater, getCommandPlayer } from "../utils/commands.js";
+import { failure, success, sendLater, getCommandPlayer } from "../utils/helper_functions.js";
 
 export function handleGamemodeCommand(origin, mode) {
     const player = getCommandPlayer(origin);

@@ -1,5 +1,5 @@
 import { system, world } from "@minecraft/server";
-import { reply, failure, success, getCommandPlayer } from "../utils/commands.js";
+import { reply, failure, success, getCommandPlayer } from "../utils/helper_functions.js";
 
 const BACK_PROPERTY = "rsp:back";
 const TELEPORT_DETECTION_DISTANCE = 8;

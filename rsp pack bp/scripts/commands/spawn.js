@@ -1,5 +1,5 @@
 import { system, world } from "@minecraft/server";
-import {getCommandPlayer} from "../utils/commands";
+import {getCommandPlayer} from "../utils/helper_functions";
 
 export function handleSpawnCommand(origin) {
     const player = getCommandPlayer(origin);

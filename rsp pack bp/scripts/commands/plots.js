@@ -1,5 +1,5 @@
 import {system, Player, CustomCommandStatus} from "@minecraft/server";
-import { reply, replyOrigin, failure } from "../utils/commands.js";
+import { reply, replyOrigin, failure } from "../utils/helper_functions.js";
 import { normaliseName, loadDestinations, saveDestinations } from "../utils/destinations.js";
 import { saveCurrentLocationAsBack } from "./back.js";
 
