@@ -9,6 +9,7 @@ import { handleSpawnCommand } from "./commands/spawn.js";
 import { handleStructureCleanupCommand } from "./commands/worldedit_structure_cleanup.js";
 import { handleSettingsCommand } from "./commands/settings.js";
 import { handleDebugCommand } from "./commands/debug.js";
+import { handleWrCommand } from "./commands/wr";
 
 system.beforeEvents.startup.subscribe((event) => {
     const registry = event.customCommandRegistry;
@@ -224,4 +225,11 @@ registry.registerCommand(placeCommand, handlePlaceCommand);
         permissionLevel: CommandPermissionLevel.Any,
         cheatsRequired: false
     }, handleSettingsCommand);
+    const wrCommand = {
+        name: "rsp:wr",
+        description: "Teleports you to the wr plot",
+        permissionLevel: CommandPermissionLevel.Any,
+        cheatsRequired: true
+    }
+    registry.registerCommand(wrCommand, handleWrCommand);
 });

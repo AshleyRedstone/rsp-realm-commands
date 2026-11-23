@@ -1,4 +1,5 @@
 import { system, world } from "@minecraft/server";
+import { getFormattedName} from "../../features/prefix.js";
 
 const PING_WHITELIST_PROPERTY = "rsp:ping_whitelist";
 const PING_ENABLED_PROPERTY = "rsp:ping_enabled";
@@ -97,40 +98,38 @@ world.beforeEvents.chatSend.subscribe((event) => {
             );
         }
 
-        let formattedMessage = originalMessage;
+        const senderName = getFormattedName(sender);
 
         for (const target of world.getAllPlayers()) {
-            if (!arePingsEnabled(target)) {
-                continue;
-            }
+            let formattedMessage = originalMessage;
 
-            const rules = getPingRules(target);
+            if (arePingsEnabled(target)) {
+                const rules = getPingRules(target);
 
-            const matchedTerms = getMatchedPingTerms(
-                originalMessage,
-                target,
-                rules
-            );
-
-            if (matchedTerms.length === 0) {
-                continue;
-            }
-
-            for (const term of matchedTerms) {
-                formattedMessage = highlightPingTerm(
-                    formattedMessage,
-                    term
+                const matchedTerms = getMatchedPingTerms(
+                    originalMessage,
+                    target,
+                    rules
                 );
+
+                if (matchedTerms.length > 0) {
+                    for (const term of matchedTerms) {
+                        formattedMessage = highlightPingTerm(
+                            formattedMessage,
+                            term
+                        );
+                    }
+
+                    if (target.id !== sender.id) {
+                        playPingSound(target);
+                    }
+                }
             }
 
-            if (target.id !== sender.id) {
-                playPingSound(target);
-            }
+            target.sendMessage(
+                `${senderName} ${formattedMessage}`
+            );
         }
-
-        world.sendMessage(
-            `<${sender.name}> ${formattedMessage}`
-        );
     });
 });
 
@@ -149,6 +148,26 @@ function containsPingTerm(message, term) {
     );
 
     return pattern.test(message);
+}
+
+function highlightPingTerm(message, term) {
+    const cleanedTerm = term.trim();
+
+    if (cleanedTerm.length === 0) {
+        return message;
+    }
+
+    const pattern = new RegExp(
+        `(^|[^\\p{L}\\p{N}_])` +
+        `(${escapePingRegex(cleanedTerm)})` +
+        `(?=$|[^\\p{L}\\p{N}_])`,
+        "giu"
+    );
+
+    return message.replace(
+        pattern,
+        (_, prefix, match) => `${prefix}§e${match}§r`
+    );
 }
 
 function escapePingRegex(text) {
