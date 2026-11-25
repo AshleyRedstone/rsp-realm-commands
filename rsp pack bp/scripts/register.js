@@ -10,6 +10,7 @@ import { handleStructureCleanupCommand } from "./commands/worldedit_structure_cl
 import { handleSettingsCommand } from "./commands/settings.js";
 import { handleDebugCommand } from "./commands/debug.js";
 import { handleWrCommand } from "./commands/wr";
+import { handleMaintenanceModeCommand } from "./commands/maintence_mode";
 
 system.beforeEvents.startup.subscribe((event) => {
     const registry = event.customCommandRegistry;
@@ -232,4 +233,11 @@ registry.registerCommand(placeCommand, handlePlaceCommand);
         cheatsRequired: true
     }
     registry.registerCommand(wrCommand, handleWrCommand);
+    const maintenanceMode = {
+        name: "rsp:maintenance",
+        description: "Toggles maintenance mode",
+        permissionLevel: CommandPermissionLevel.GameDirectors,
+        cheatsRequired: true
+    }
+    registry.registerCommand(maintenanceMode, handleMaintenanceModeCommand);
 });
