@@ -126,7 +126,6 @@ rsp.settings.chat.title=Chat
 rsp.settings.chat.death_messages.disable=Disable death messages
 rsp.settings.chat.death_messages.enable=Enable death messages
 rsp.settings.chat.afk_messages.enable=Disable afk messages
-rsp.settings.chat.afk_messages.enable=Enable afk messages
 rsp.death.generic=%s died
 rsp.death.anvil=%s was squashed by a falling anvil
 rsp.death.blockExplosion=%s blew up
