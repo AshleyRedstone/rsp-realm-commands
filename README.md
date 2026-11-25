@@ -50,6 +50,8 @@ a collection of behaviour packs and scripts used by the RSP server
 ### Chat Settings
 #### Death Messages
 *allows you to enable or disable death messages*
+#### Afk Messages
+*show or hide afk messages*
 
 ***
 
