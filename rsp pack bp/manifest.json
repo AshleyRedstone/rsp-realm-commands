@@ -1,12 +1,12 @@
 {
     "format_version": 2,
     "header": {
-        "name": "Plot Teleport",
-        "description": "Adds plot teleport commands",
+        "name": "RSP Server Pack",
+        "description": "features and utilities for the rsp server",
         "uuid": "1df08878-ee9a-46b2-a100-93fd93cb7e31",
         "version": [
             1,
-            0,
+            2,
             0
         ],
         "min_engine_version": [
