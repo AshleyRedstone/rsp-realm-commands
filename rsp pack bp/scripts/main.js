@@ -12,6 +12,7 @@ import "./settings/categories/chat.js";
 import "./settings/features/autoset_blocks.js";
 import "./settings/features/nodrops.js";
 import "./settings/features/ping.js";
+import "./settings/features/no_item_pickup.js";
 import "./settings/registry.js";
 import "./settings/renderer.js";
 import "./register.js";
