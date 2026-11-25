@@ -24,13 +24,11 @@ system.runInterval(() => {
         } else if (currentTimer === afkTimer) {
             if (player.hasTag("afk")) { continue; }
             player.addTag("afk");
-            for (const players of world.getAllPlayers()) {
-                if (player.hasTag("hideAfkMessages")) { continue; }
-                player.sendMessage({
-                    translate: "rsp:nowAfk",
-                    with: player
-                })
-            }
+            if (player.hasTag("hideAfkMessages")) { continue; }
+            player.sendMessage({
+                translate: "rsp:nowAfk",
+                with: [String(player.nameTag)]
+            })
         }
     }
 }, 1);
@@ -51,11 +49,10 @@ function resetAfkTimer(player) {
     player.setDynamicProperty("rsp:afkTimer", 0);
     if (player.hasTag("afk")) {
         player.removeTag("afk");
-        for (const players of world.getAllPlayers()) {
-            if (player.hasTag("hideAfkMessages")) { continue; }
+        if (!(player.hasTag("hideAfkMessages"))) {
             player.sendMessage({
                 translate: "rsp:noLongerAfk",
-                with: player
+                with: [String(player.nameTag)]
             })
         }
     }
