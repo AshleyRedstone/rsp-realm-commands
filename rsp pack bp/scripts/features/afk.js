@@ -23,8 +23,14 @@ system.runInterval(() => {
             player.setDynamicProperty("rsp:afkTimer", currentTimer+1);
         } else if (currentTimer === afkTimer) {
             if (player.hasTag("afk")) { continue; }
-            player.sendMessage("You are now afk!");
             player.addTag("afk");
+            for (const players of world.getAllPlayers()) {
+                if (player.hasTag("hideAfkMessages")) { continue; }
+                player.sendMessage({
+                    translate: "rsp:nowAfk",
+                    with: player
+                })
+            }
         }
     }
 }, 1);
@@ -44,7 +50,13 @@ function hasCameraMoved(player) {
 function resetAfkTimer(player) {
     player.setDynamicProperty("rsp:afkTimer", 0);
     if (player.hasTag("afk")) {
-        player.sendMessage("You are no longer afk!");
         player.removeTag("afk");
+        for (const players of world.getAllPlayers()) {
+            if (player.hasTag("hideAfkMessages")) { continue; }
+            player.sendMessage({
+                translate: "rsp:noLongerAfk",
+                with: player
+            })
+        }
     }
 }
